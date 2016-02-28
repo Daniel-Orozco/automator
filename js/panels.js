@@ -16,7 +16,7 @@ function captureInput(e) {
                 if(characters[i] != ' ')
                     command += characters[i] + "\n";
             }
-            
+
             txt += command + "=====\n";
             document.getElementById("operations").innerHTML = txt;
 
@@ -65,4 +65,13 @@ function applyOperation(operator, b, a) {
             break;
     }
     return 0;
+}
+
+
+function higherOrder(op1, op2) {
+    if (op2 == '(' || op2 == ')')
+        return false;
+    if ((op1 == '*' || op1 == '/') && (op2 == '+' || op2 == '-'))
+        return false;
+    return true;
 }
