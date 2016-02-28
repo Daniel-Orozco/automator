@@ -4,23 +4,14 @@ var command = '';
 var numbers = new Array();
 var operators = new Array();
 
-function process(e) {
+function captureInput(e) {
     var code = (e.keyCode ? e.keyCode : e.which);
     if (code == 13) { //Enter keycode
         command = document.getElementById("input").value;
         characters = command.split('');
-        command = '';
 
-        var isValid = false;
-
-        for (i = 0; i < characters.length; i++) {
-            if(characters[i] == '=') {
-                isValid = true;
-                break;
-            }
-        }
-
-        if (isValid) {
+        if (isValid()) {
+            command = '';
             for (i = 0; i < characters.length; i++) {
                 if(characters[i] != ' ')
                     command += characters[i] + "\n";
@@ -41,27 +32,13 @@ function process(e) {
     }
 }
 
-/*
-for(cleft = characters.length; cleft >= 0; cleft--) {
-    if (characters[cleft] == '=') {
-        isValid = true;
-        break;
-    }
-    if (characters[cleft] != ' ')
-        break;
-}*/
+function isValid() {
 
-/*
-for (i = 0; i < characters.length; i++) {
-    if (characters[i] == ' ')
-        continue;
+    var isValid = false;
+    var re = /([-+]?[0-9]*\.?[0-9]+[\/\+\-\*])+([-+]?[0-9]*\.?[0-9]+)(?=.*=$)/g;
+    // positivo/negativo; 0-9 .; /+-*; =;
 
-    if (characters[i] >= '0' && characters[i] <= '9') {
-        var numword = '';
-        while (i < characters.length && characters[i] >= '0' && characters[i] <= '9')
-            numword += characters[i++];
-        numbers.push(parseInt())
-    }
+    isValid = re.test(command);
+
+    return isValid;
 }
-command = numbers.pop();
-*/
