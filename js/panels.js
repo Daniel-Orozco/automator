@@ -16,7 +16,7 @@ function captureInput(e) {
                 if(characters[i] != ' ')
                     command += characters[i] + "\n";
             }
-
+            
             txt += command + "=====\n";
             document.getElementById("operations").innerHTML = txt;
 
@@ -41,4 +41,28 @@ function isValid() {
     isValid = re.test(command);
 
     return isValid;
+}
+
+function applyOperation(operator, b, a) {
+    switch (operator)
+    {
+        case '+':
+            return a + b;
+            break;
+        case '-':
+            return a - b;
+            break;
+        case '*':
+            return a * b;
+            break;
+        case '/':
+            if (b == 0) {
+                arithmeticError = true;
+            }
+            else {
+                return parseInt(a / b);
+            }
+            break;
+    }
+    return 0;
 }
