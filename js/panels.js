@@ -10,6 +10,8 @@ var operators = new Stack();
 var arithmeticError = false;
 var operatorError = false;
 
+var currentError = '';
+
 function captureInput(e) {
     var code = (e.keyCode ? e.keyCode : e.which);
     if(code == 32) {
@@ -17,6 +19,7 @@ function captureInput(e) {
         return false;
     }
     if (code == 13) { //Enter keycode
+        currentError = '';
         input = document.getElementById("input").value;
         command = input;
         characters = command.split('');
@@ -77,40 +80,58 @@ function captureInput(e) {
                         return true;
                     }
                 }
-                result = numbers.pop();
-                //
-                txt += command + "= " + result + sectionbreak;
-                document.getElementById("operations").innerHTML = txt;
-
-                document.getElementById('message').innerHTML = " ";
-                //
+                validOutput();
             }
 
         }
         else {
             document.getElementById('message').innerHTML = "Error: Invalid expression";
+            document.getElementById('input').value = "";
+            if(event.preventDefault) event.preventDefault();
         }
-
-        document.getElementById('input').value = "";
-        if(event.preventDefault) event.preventDefault();
         return false;
     }
 }
 
 function errorOutput() {
-    txt += input + "\nERROR" + sectionbreak;
+    txt += input + "\n"+currentError.toUpperCase()+" ERROR" + sectionbreak;
     document.getElementById("operations").innerHTML = txt;
-    document.getElementById('message').innerHTML = arithmeticError ? "Error: Arithmetic error" : "Error: Operator error";
+    document.getElementById('message').innerHTML = "Error: "+currentError+" error";
     document.getElementById('input').value = "";
+
+    var textArea = document.getElementById('operations');
+    textArea.scrollTop = textArea.scrollHeight;
+
+    if(event.preventDefault) event.preventDefault();
+}
+
+function validOutput() {
+    result = numbers.pop();
+
+    txt += command + "= " + result + sectionbreak;
+    document.getElementById("operations").innerHTML = txt;
+    document.getElementById('message').innerHTML = " ";
+    document.getElementById('input').value = "";
+
+    var textArea = document.getElementById('operations');
+    textArea.scrollTop = textArea.scrollHeight;
+
+    if(event.preventDefault) event.preventDefault();
 }
 
 function isValid() {
 
     var isValid = false;
-    var re = /([-+]?[0-9]*\.?[0-9]+[\/\+\-\*])+([-+]?[0-9]*\.?[0-9]+)(?=.*=$)/g;
-    // positivo/negativo; 0-9 .; /+-*; =;
+    var re = /([-+]?[0-9]*\.?[0-9]+[\/\+\-\*])+([-+]?[0-9]*\.?[0-9]+)(?=.*=$)/g; //
 
     isValid = re.test(command);
+
+    if(isValid) {
+        if(characters[0] == '-') {
+            var tstring = '0'+characters.join();
+            characters = tstring.split('');
+        }
+    }
 
     for (i = 0; i < characters.length; i++) {
         var opword = '';
@@ -124,7 +145,7 @@ function isValid() {
 }
 
 function hasError() {
-    if(arithmeticError == true || operatorError == true) {
+    if(currentError != '') {
         return true;
     }
     return false;
@@ -140,30 +161,60 @@ function pushNumber(num) {
 function applyOperation(operator, b, a) {
     if(a == null || b == null)
     {
-        operatorError = true;
+        currentError = 'Operator';
+        return null;
+    }
+    var upLim = 99999999999;
+    var lowLim = -99999999999;
+    if(a > upLim || a < lowLim || b > upLim || b < lowLim)
+    {
+        currentError = 'Overflow';
         return null;
     }
     var currOp = a + " " + operator + " " + b + " = ";
     switch (operator)
     {
         case '+':
+            if((a + b) > upLim || (a + b) < lowLim)
+            {
+                currentError = 'Overflow';
+                return null;
+            }
             command += currOp + (a+b) + "\n";
             return a + b;
             break;
         case '-':
+            if((a - b) > upLim || (a - b) < lowLim)
+            {
+                currentError = 'Overflow';
+                return null;
+            }
+            if(command == input+"\n" && a == 0) {
+                return a - b;
+            }
             command += currOp + (a-b) + "\n";
             return a - b;
             break;
         case '*':
+            if((a * b) > upLim || (a * b) < lowLim)
+            {
+                currentError = 'Overflow';
+                return null;
+            }
             command += currOp + (a*b) + "\n";
             return a * b;
             break;
         case '/':
             if (b == 0) {
-                arithmeticError = true;
+                currentError = 'Arithmetic';
                 return null;
             }
             else {
+                if((a / b) > upLim || (a / b) < lowLim)
+                {
+                    currentError = 'Overflow';
+                    return null;
+                }
                 command += currOp + (parseInt(a/b)) + "\n";
                 return parseInt(a / b);
             }
