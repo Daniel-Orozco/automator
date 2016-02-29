@@ -85,9 +85,10 @@ function captureInput(e) {
 
         }
         else {
-            document.getElementById('message').innerHTML = "Error: Invalid expression";
-            document.getElementById('input').value = "";
+            currentError = 'Invalid Expression';
+            errorOutput();
             if(event.preventDefault) event.preventDefault();
+            return false;
         }
         return false;
     }
@@ -96,7 +97,24 @@ function captureInput(e) {
 function errorOutput() {
     txt += input + "\n"+currentError.toUpperCase()+" ERROR" + sectionbreak;
     document.getElementById("operations").innerHTML = txt;
-    document.getElementById('message').innerHTML = "Error: "+currentError+" error";
+    var errorMsg = currentError+" error. ";
+    switch (currentError) {
+        case 'Arithmetic':
+            errorMsg+="Remove any invalid arithmetic operation (i.e. divide by 0).";
+            break;
+        case 'Operator':
+            errorMsg+="Operators cannot be stacked unless to denote negative numbers once.";
+            break;
+        case 'Overflow':
+            errorMsg+="The max digit number is 12.";
+            break;
+        case 'Invalid Expression':
+            errorMsg+="Only numbers, arithmetic operators and the equal sign are allowed.";
+            break;
+        default:
+            break;
+    }
+    document.getElementById('message').innerHTML = errorMsg;
     document.getElementById('input').value = "";
 
     var textArea = document.getElementById('operations');
@@ -134,9 +152,14 @@ function isValid() {
     }
 
     for (i = 0; i < characters.length; i++) {
+        if(characters[i] == null || !(isNumber(characters[i]) || isOperator(characters[i]) || characters[i] == '=')) {
+            currentError = 'Invalid Expression';
+            return false;
+        }
         var opword = '';
-        while (i < characters.length && isOperator(characters[i]))
+        while (i < characters.length && isOperator(characters[i])) {
             opword += characters[i++];
+        }
         if(opword.length > 2)
             return false;
     }
