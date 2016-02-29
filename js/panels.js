@@ -11,10 +11,10 @@ function captureInput(e) {
         command = document.getElementById("input").value;
         characters = command.split('');
 
-
         if (isValid()) {
-
+            command += "\n";
             var arithmeticError = false;
+            var operatorError = false;
 
             for (i = 0; i < characters.length; i++) {
                 if (characters[i] == ' ') {
@@ -25,7 +25,7 @@ function captureInput(e) {
                 }
                 else {
                     //Number
-                    if (characters[i] >= '0' && characters[i] <= '9') {
+                    if (isNumber(characters[i])) {
                         var numword = '';
                         while (i < characters.length && characters[i] >= '0' && characters[i] <= '9')
                             numword += characters[i++];
@@ -41,31 +41,30 @@ function captureInput(e) {
                         operators.pop();
                     }
                     //Operations
-                    if (characters[i] == '+' || characters[i] == '-' || characters[i] == '*' || characters[i] == '/') {
-                        while (operators.peek() != null && higherOrder(characters[i], operators.peek()))
-                            numbers.push(applyOperation(operators.pop(), numbers.pop(), numbers.pop()));
+                     if (isOperator(characters[i])) {
+                         while (operators.peek() != null && higherOrder(characters[i], operators.peek())) {
+                             numbers.push(applyOperation(operators.pop(), numbers.pop(), numbers.pop()));
+                        }
                         operators.push(characters[i]);
                     }
                 }
             }
-
-            if (arithmeticError == false) {
+            if (arithmeticError == false && operatorError == false) {
                 while (operators.peek() != null) {
                     numbers.push(applyOperation(operators.pop(), numbers.pop(), numbers.pop()));
                 }
             }
             result = numbers.pop();
+            //
+            txt += command + "= " + result + "\n ------------------------------------------ \n";
+            document.getElementById("operations").innerHTML = txt;
+
+            document.getElementById('message').innerHTML = " ";
+            //
         }
         else {
             document.getElementById('message').innerHTML = "Error: Invalid expression";
         }
-
-        //
-        txt += result + "=====\n";
-        document.getElementById("operations").innerHTML = txt;
-
-        document.getElementById('message').innerHTML = " ";
-        //
 
         document.getElementById('input').value = "";
         if(event.preventDefault) event.preventDefault();
@@ -81,19 +80,31 @@ function isValid() {
 
     isValid = re.test(command);
 
+    for (i = 0; i < characters.length; i++) {
+        var opword = '';
+        while (i < characters.length && isOperator(characters[i]))
+            opword += characters[i++];
+        if(opword.length > 2)
+            return false;
+    }
+
     return isValid;
 }
 
 function applyOperation(operator, b, a) {
+    var currOp = a + " " + operator + " " + b + " = ";
     switch (operator)
     {
         case '+':
+            command += currOp + (a+b) + "\n";
             return a + b;
             break;
         case '-':
+            command += currOp + (a-b) + "\n";
             return a - b;
             break;
         case '*':
+            command += currOp + (a*b) + "\n";
             return a * b;
             break;
         case '/':
@@ -101,11 +112,24 @@ function applyOperation(operator, b, a) {
                 arithmeticError = true;
             }
             else {
+                command += currOp + (parseInt(a/b)) + "\n";
                 return parseInt(a / b);
             }
             break;
     }
     return 0;
+}
+
+function isOperator(chara) {
+    if(chara == '+' || chara == '-' || chara == '*' || chara == '/')
+        return true;
+    return false;
+}
+
+function isNumber(num) {
+    if (num >= '0' && num <= '9')
+        return true;
+    return false;
 }
 
 function higherOrder(op1, op2) {
