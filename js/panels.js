@@ -1,33 +1,44 @@
 var txt = '';
 var command = '';
+var input = '';
+var sectionbreak = '\n ------------------------------------------ \n';
 var result = 0;
 
 var numbers = new Stack();
 var operators = new Stack();
 
+var arithmeticError = false;
+var operatorError = false;
+
 function captureInput(e) {
     var code = (e.keyCode ? e.keyCode : e.which);
+    if(code == 32) {
+        if(event.preventDefault) event.preventDefault();
+        return false;
+    }
     if (code == 13) { //Enter keycode
-        command = document.getElementById("input").value;
+        input = document.getElementById("input").value;
+        command = input;
         characters = command.split('');
+
+        arithmeticError = false;
+        operatorError = false;
 
         if (isValid()) {
             command += "\n";
-            var arithmeticError = false;
-            var operatorError = false;
 
-            for (i = 0; i < characters.length; i++) {
+            for (i = 0; !hasError() && i < characters.length; i++) {
                 if (characters[i] == ' ') {
                     continue;
                 }
                 if (characters[i] == '=') {
                     break;
                 }
-                else {
+                else if(!hasError()){
                     //Number
                     if (isNumber(characters[i])) {
                         var numword = '';
-                        while (i < characters.length && characters[i] >= '0' && characters[i] <= '9')
+                        while (!hasError() && i < characters.length && isNumber(characters[i]))
                             numword += characters[i++];
                         numbers.push(parseInt(numword));
                     }
@@ -36,31 +47,45 @@ function captureInput(e) {
                         operators.push(characters[i]);
                     }
                     else if (characters[i] == ')') {
-                        while (operators.peek() != '(')
-                            numbers.push(applyOperation(operators.pop(), numbers.pop(), numbers.pop()));
+                        while (!hasError() && operators.peek() != '(') {
+                            if(!(pushNumber(applyOperation(operators.pop(), numbers.pop(), numbers.pop())))) {
+                                errorOutput();
+                                if(event.preventDefault) event.preventDefault();
+                                return true;
+                            }
+                        }
                         operators.pop();
                     }
                     //Operations
                      if (isOperator(characters[i])) {
-                         while (operators.peek() != null && higherOrder(characters[i], operators.peek())) {
-                             numbers.push(applyOperation(operators.pop(), numbers.pop(), numbers.pop()));
+                         while (!hasError() && operators.peek() != null && higherOrder(characters[i], operators.peek())) {
+                             if(!(pushNumber(applyOperation(operators.pop(), numbers.pop(), numbers.pop())))) {
+                                 errorOutput();
+                                 if(event.preventDefault) event.preventDefault();
+                                 return true;
+                             }
                         }
                         operators.push(characters[i]);
                     }
                 }
             }
-            if (arithmeticError == false && operatorError == false) {
+            if (!hasError()) {
                 while (operators.peek() != null) {
-                    numbers.push(applyOperation(operators.pop(), numbers.pop(), numbers.pop()));
+                    if(!(pushNumber(applyOperation(operators.pop(), numbers.pop(), numbers.pop())))) {
+                        errorOutput();
+                        if(event.preventDefault) event.preventDefault();
+                        return true;
+                    }
                 }
-            }
-            result = numbers.pop();
-            //
-            txt += command + "= " + result + "\n ------------------------------------------ \n";
-            document.getElementById("operations").innerHTML = txt;
+                result = numbers.pop();
+                //
+                txt += command + "= " + result + sectionbreak;
+                document.getElementById("operations").innerHTML = txt;
 
-            document.getElementById('message').innerHTML = " ";
-            //
+                document.getElementById('message').innerHTML = " ";
+                //
+            }
+
         }
         else {
             document.getElementById('message').innerHTML = "Error: Invalid expression";
@@ -70,6 +95,13 @@ function captureInput(e) {
         if(event.preventDefault) event.preventDefault();
         return false;
     }
+}
+
+function errorOutput() {
+    txt += input + "\nERROR" + sectionbreak;
+    document.getElementById("operations").innerHTML = txt;
+    document.getElementById('message').innerHTML = arithmeticError ? "Error: Arithmetic error" : "Error: Operator error";
+    document.getElementById('input').value = "";
 }
 
 function isValid() {
@@ -91,7 +123,26 @@ function isValid() {
     return isValid;
 }
 
+function hasError() {
+    if(arithmeticError == true || operatorError == true) {
+        return true;
+    }
+    return false;
+}
+
+function pushNumber(num) {
+    if(num != null) {
+        numbers.push(num);
+        return true;
+    }
+    return false;
+}
 function applyOperation(operator, b, a) {
+    if(a == null || b == null)
+    {
+        operatorError = true;
+        return null;
+    }
     var currOp = a + " " + operator + " " + b + " = ";
     switch (operator)
     {
@@ -110,6 +161,7 @@ function applyOperation(operator, b, a) {
         case '/':
             if (b == 0) {
                 arithmeticError = true;
+                return null;
             }
             else {
                 command += currOp + (parseInt(a/b)) + "\n";
@@ -153,15 +205,17 @@ function Stack(){
     }
 
     this.push = function(data){
-        var node = {
-            data : data,
-            next : null
+        if(data !== null) {
+            var node = {
+                data : data,
+                next : null
+            }
+
+            node.next = this.top;
+            this.top = node;
+
+            this.count++;
         }
-
-        node.next = this.top;
-        this.top = node;
-
-        this.count++;
     }
 
     this.peek = function(){
