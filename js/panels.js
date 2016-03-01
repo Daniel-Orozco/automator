@@ -93,9 +93,9 @@ function captureInput(e) {
         return false;
     }
 }
-
+//oplog: txt += input
 function errorOutput() {
-    txt += input + "\n"+currentError.toUpperCase()+" ERROR" + sectionbreak;
+    txt = input + "\n"+currentError.toUpperCase()+" ERROR" + sectionbreak;
     document.getElementById("operations").innerHTML = txt;
     var errorMsg = currentError+" error. ";
     switch (currentError) {
@@ -126,7 +126,7 @@ function errorOutput() {
 function validOutput() {
     result = numbers.pop();
 
-    txt += command + "= " + result + sectionbreak;
+    txt = command + "= " + result + sectionbreak;
     document.getElementById("operations").innerHTML = txt;
     document.getElementById('message').innerHTML = " ";
     document.getElementById('input').value = "";
