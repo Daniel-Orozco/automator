@@ -8,25 +8,58 @@
     <title>Storm AT</title>
 
     <script type="text/javascript" src="js/panels.js"></script>
-    <script src="js/jquery.min.js"></script>
+    <script src="js/jquery-2.2.1.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
     <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/custom.css" rel="stylesheet">
   </head>
 
   <body>
-    <h1>Storm AT</h1>
+
+  <div>
+      <h1>Storm AT
+        <a href="#openModal" class="btn btn-default btn-sm">
+          <span class="glyphicon glyphicon-question-sign"></span> Help
+        </a>
+      </h1>
+    </div>
 
     <div class="col-xs-12" style="height:30px;">
       <textarea id="input" cols="80" rows="1" style="resize: none;" maxlength="100" data-toggle="tooltip" data-placement="top" title="This is the Input area. Write a valid arithmetic operation, ending with =, and press Enter" onkeypress="captureInput(event, this)"></textarea>
     </div>
     <div class="col-xs-12" style="height:20px;" id="message">
-      Enter a valid operation on the text area above, ending with the symbol = , and press Enter.
+      Enter a valid operation on the text area above, ending with the equal sign (=), and press Enter.
     </div>
     <div class="col-xs-12" style="height:50px;" data-toggle="tooltip" data-placement="top" title="This is the Operations area. All operations done are stored here, as well as their result and any possible error.">
       <textarea id="operations" cols="80" rows="20" style="resize: none;" readonly ></textarea>
     </div>
-    <!-- JQUERY + BOOTSTRAP  -->
-    <script src="js/jquery-2.2.1.min"></script>
-    <script src="js/bootstrap.min.js"></script>
+
+    <div id="openModal" class="modalDialog">
+      <div>	<a href="#close" title="Close" class="close">X</a>
+        <div style="text-align:center;">
+          <h1>Storm AT<small>&nbsp Automata Theory Calculator</small></h1>
+          <p><small>To close this help window, click the X at its top-right corner.</small></p>
+        </div>
+        <legend></legend>
+
+        <h4>Input Area</h4>
+        <p>The first text area, enter valid arithmetic operations ending with an equal sign (=) then press Enter.</p>
+        <p><strong>Valid characters:</strong> Numbers (0-9), Arithmetic Operators (+, -, *, /), end-of-line equal sign (=).</p>
+        <p><strong>Invalid inputs:</strong> Non-valid characters, no operator between numbers, no numbers between operator, equal sign anywhere but end of line.</p>
+        <legend></legend>
+        <h4>Message Area</h4>
+        <p>Between the two text areas, displays any error the input or its operations may have.</p>
+        <ul>
+          <li><strong>Invalid Expression: </strong>An invalid character or input was given</li>
+          <li><strong>Arithmetic: </strong>An invalid arithmetic operation occurred like division by zero.</li>
+          <li><strong>Operator: </strong>Operators cannot be stacked unless to denote negative numbers once.</li>
+          <li><strong>Overflow: </strong>A number has exceeded the max digit limit, which is 12.</li>
+        </ul>
+        <legend></legend>
+        <h4>Operations Area</h4>
+        <p>The lower text area, shows the operations as the calculator executes them from the input area.</p>
+      </div>
+    </div>
   </body>
+
 </html>

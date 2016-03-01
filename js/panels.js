@@ -7,11 +7,11 @@ var result = 0;
 var numbers = new Stack();
 var operators = new Stack();
 
-var arithmeticError = false;
-var operatorError = false;
-
 var currentError = '';
-
+function overlay() {
+    el = document.getElementById("overlay");
+    el.style.visibility = (el.style.visibility == "visible") ? "hidden" : "visible";
+}
 function captureInput(e) {
     var code = (e.keyCode ? e.keyCode : e.which);
     if(code == 32) {
@@ -23,9 +23,6 @@ function captureInput(e) {
         input = document.getElementById("input").value;
         command = input;
         characters = command.split('');
-
-        arithmeticError = false;
-        operatorError = false;
 
         if (isValid()) {
             command += "\n";
@@ -44,6 +41,12 @@ function captureInput(e) {
                         while (!hasError() && i < characters.length && isNumber(characters[i]))
                             numword += characters[i++];
                         numbers.push(parseInt(numword));
+                        if(characters[i] == '=' && i < characters.length-1) {
+                            currentError = 'Invalid Expression';
+                            errorOutput();
+                            if(event.preventDefault) event.preventDefault();
+                            return true;
+                        }
                     }
                     //Parenthesis
                     else if (characters[i] == '(') {
@@ -106,10 +109,10 @@ function errorOutput() {
             errorMsg+="Operators cannot be stacked unless to denote negative numbers once.";
             break;
         case 'Overflow':
-            errorMsg+="The max digit number is 12.";
+            errorMsg+="A number has exceeded the max digit limit, which is 12.";
             break;
         case 'Invalid Expression':
-            errorMsg+="Only numbers, arithmetic operators and the equal sign are allowed.";
+            errorMsg+="Only numbers, arithmetic operators and finishing equal sign are allowed.";
             break;
         default:
             break;
