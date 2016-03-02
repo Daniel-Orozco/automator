@@ -50,13 +50,14 @@ function captureInput(e) {
                             numword += characters[i];
                             i++;
                         }
+                        i--;
                         if(numword.length > 12) {
                             errorOutput('Overflow');
                             if(event.preventDefault) event.preventDefault();
                             return true;
                         }
                         numbers.push(parseInt(numword));
-                        if(signs.length!=0) {
+                        if(signs.getCount()!=0) {
                             switch(signs.pop()) {
                                 case "-":
                                     numbers.push(numbers.pop()*-1);
