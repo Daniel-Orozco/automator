@@ -3,6 +3,7 @@ var command = '';
 var input = '';
 var sectionbreak = '\n ------------------------------------------ \n';
 var result = 0;
+var prevState = '';
 
 var numbers = new Stack();
 var operators = new Stack();
@@ -20,18 +21,17 @@ function captureInput(e) {
         input = document.getElementById("input").value;
         command = input;
         characters = command.split('');
+        prevState = '';
 
         if (isValid()) {
             command += "\n";
-
             for (i = 0; !hasError() && i < characters.length; i++) {
                 if (characters[i] == ' ') {
                     continue;
                 }
                 if (characters[i] == '=') {
                     if(i < characters.length -1) {
-                        currentError = 'Invalid Expression';
-                        errorOutput();
+                        errorOutput('Invalid Expression');
                         if(event.preventDefault) event.preventDefault();
                         return true;
                     }
@@ -40,9 +40,19 @@ function captureInput(e) {
                 else if(!hasError()){
                     //Number
                     if (isNumber(characters[i])) {
+                        if(prevState == 'Number') {
+                            errorOutput('Invalid Expression');
+                            if(event.preventDefault) event.preventDefault();
+                            return true;
+                        }
                         var numword = '';
                         while (!hasError() && i < characters.length && isNumber(characters[i]))
                             numword += characters[i++];
+                        if(numword.length > 12) {
+                            errorOutput('Overflow');
+                            if(event.preventDefault) event.preventDefault();
+                            return true;
+                        }
                         numbers.push(parseInt(numword));
                         if(signs.length!=0) {
                             switch(signs.pop()) {
@@ -50,6 +60,7 @@ function captureInput(e) {
                                     numbers.push(numbers.pop()*-1);
                             }
                         }
+                        prevState = 'Number';
                     }
                     //Parenthesis
                     else if (characters[i] == '(') {
@@ -58,7 +69,6 @@ function captureInput(e) {
                     else if (characters[i] == ')') {
                         while (!hasError() && operators.peek() != '(') {
                             if(!(pushNumber(applyOperation(operators.pop(), numbers.pop(), numbers.pop())))) {
-                                errorOutput();
                                 if(event.preventDefault) event.preventDefault();
                                 return true;
                             }
@@ -68,24 +78,29 @@ function captureInput(e) {
                     //Sign
                     else if((characters[i] == "+" || characters[i] == "-")&&(i==0 || isOperator(characters[i-1]))) {
                         signs.push(characters[i]);
+                        prevState = 'Sign';
                     }
                     //Operations
                     else if (isOperator(characters[i])) {
-                         while (!hasError() && operators.peek() != null && higherOrder(characters[i], operators.peek())) {
+                        while (!hasError() && operators.peek() != null && higherOrder(characters[i], operators.peek())) {
                              if(!(pushNumber(applyOperation(operators.pop(), numbers.pop(), numbers.pop())))) {
-                                 errorOutput();
                                  if(event.preventDefault) event.preventDefault();
                                  return true;
                              }
                         }
                         operators.push(characters[i]);
+                        prevState = 'Operator';
+                    }
+                    else {
+                        errorOutput('Invalid Expression');
+                        if(event.preventDefault) event.preventDefault();
+                        return true;
                     }
                 }
             }
             if (!hasError()) {
                 while (operators.peek() != null) {
                     if(!(pushNumber(applyOperation(operators.pop(), numbers.pop(), numbers.pop())))) {
-                        errorOutput();
                         if(event.preventDefault) event.preventDefault();
                         return true;
                     }
@@ -95,8 +110,7 @@ function captureInput(e) {
 
         }
         else {
-            currentError = 'Invalid Expression';
-            errorOutput();
+            errorOutput('Invalid Expression');
             if(event.preventDefault) event.preventDefault();
             return false;
         }
@@ -104,11 +118,12 @@ function captureInput(e) {
     }
 }
 //oplog: txt += input
-function errorOutput() {
-    txt = input + "\n"+currentError.toUpperCase()+" ERROR" + sectionbreak;
+function errorOutput(type) {
+    currentError = type;
+    txt = input + "\n"+type.toUpperCase()+" ERROR" + sectionbreak;
     document.getElementById("operations").innerHTML = txt;
-    var errorMsg = currentError+" error. ";
-    switch (currentError) {
+    var errorMsg = type+" error. ";
+    switch (type) {
         case 'Arithmetic':
             errorMsg+="Remove any invalid arithmetic operation (i.e. divide by 0).";
             break;
@@ -154,7 +169,7 @@ function isValid() {
     isValid = re.test(command);
     if(isValid)
         return true;
-    currentError = 'Invalid Expression';
+    errorOutput('Invalid Expression');
     return false;
 }
 
@@ -175,14 +190,14 @@ function pushNumber(num) {
 function applyOperation(operator, b, a) {
     if(a == null || b == null)
     {
-        currentError = 'Operator';
+        errorOutput('Operator');
         return null;
     }
     var upLim = 99999999999;
     var lowLim = -99999999999;
     if(a > upLim || a < lowLim || b > upLim || b < lowLim)
     {
-        currentError = 'Overflow';
+        errorOutput('Overflow');
         return null;
     }
     var currOp = a + " " + operator + " " + b + " = ";
@@ -191,7 +206,7 @@ function applyOperation(operator, b, a) {
         case '+':
             if((a + b) > upLim || (a + b) < lowLim)
             {
-                currentError = 'Overflow';
+                errorOutput('Overflow');
                 return null;
             }
             command += currOp + (a+b) + "\n";
@@ -200,7 +215,7 @@ function applyOperation(operator, b, a) {
         case '-':
             if((a - b) > upLim || (a - b) < lowLim)
             {
-                currentError = 'Overflow';
+                errorOutput('Overflow');
                 return null;
             }
             if(command == input+"\n" && a == 0) {
@@ -212,7 +227,7 @@ function applyOperation(operator, b, a) {
         case '*':
             if((a * b) > upLim || (a * b) < lowLim)
             {
-                currentError = 'Overflow';
+                errorOutput('Overflow');
                 return null;
             }
             command += currOp + (a*b) + "\n";
@@ -220,13 +235,13 @@ function applyOperation(operator, b, a) {
             break;
         case '/':
             if (b == 0) {
-                currentError = 'Arithmetic';
+                errorOutput('Arithmetic');
                 return null;
             }
             else {
                 if((a / b) > upLim || (a / b) < lowLim)
                 {
-                    currentError = 'Overflow';
+                    errorOutput('Overflow');
                     return null;
                 }
                 command += currOp + (parseInt(a/b)) + "\n";
