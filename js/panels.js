@@ -6,6 +6,7 @@ var result = 0;
 
 var numbers = new Stack();
 var operators = new Stack();
+var signs = new Stack();
 
 var currentError = '';
 function overlay() {
@@ -14,10 +15,6 @@ function overlay() {
 }
 function captureInput(e) {
     var code = (e.keyCode ? e.keyCode : e.which);
-    if(code == 32) {
-        if(event.preventDefault) event.preventDefault();
-        return false;
-    }
     if (code == 13) { //Enter keycode
         currentError = '';
         input = document.getElementById("input").value;
@@ -32,6 +29,12 @@ function captureInput(e) {
                     continue;
                 }
                 if (characters[i] == '=') {
+                    if(i < characters.length -1) {
+                        currentError = 'Invalid Expression';
+                        errorOutput();
+                        if(event.preventDefault) event.preventDefault();
+                        return true;
+                    }
                     break;
                 }
                 else if(!hasError()){
@@ -41,11 +44,11 @@ function captureInput(e) {
                         while (!hasError() && i < characters.length && isNumber(characters[i]))
                             numword += characters[i++];
                         numbers.push(parseInt(numword));
-                        if(characters[i] == '=' && i < characters.length-1) {
-                            currentError = 'Invalid Expression';
-                            errorOutput();
-                            if(event.preventDefault) event.preventDefault();
-                            return true;
+                        if(signs.length!=0) {
+                            switch(signs.pop()) {
+                                case "-":
+                                    numbers.push(numbers.pop()*-1);
+                            }
                         }
                     }
                     //Parenthesis
@@ -62,8 +65,12 @@ function captureInput(e) {
                         }
                         operators.pop();
                     }
+                    //Sign
+                    else if((characters[i] == "+" || characters[i] == "-")&&(i==0 || isOperator(characters[i-1]))) {
+                        signs.push(characters[i]);
+                    }
                     //Operations
-                     if (isOperator(characters[i])) {
+                    else if (isOperator(characters[i])) {
                          while (!hasError() && operators.peek() != null && higherOrder(characters[i], operators.peek())) {
                              if(!(pushNumber(applyOperation(operators.pop(), numbers.pop(), numbers.pop())))) {
                                  errorOutput();
@@ -141,33 +148,14 @@ function validOutput() {
 }
 
 function isValid() {
-
     var isValid = false;
-    var re = /([-+]?[0-9]*\.?[0-9]+[\/\+\-\*])+([-+]?[0-9]*\.?[0-9]+)(?=.*=$)/g; //
+    var re = /([ ]*[-+]?[0-9]{1,12})([ ]*[+-/*][ ]*[+-]?[0-9]{1,12})*([ ]*[=]{1}[ ]*)/g; //
 
     isValid = re.test(command);
-
-    if(isValid) {
-        if(characters[0] == '-') {
-            var tstring = '0'+characters.join();
-            characters = tstring.split('');
-        }
-    }
-
-    for (i = 0; i < characters.length; i++) {
-        if(characters[i] == null || !(isNumber(characters[i]) || isOperator(characters[i]) || characters[i] == '=')) {
-            currentError = 'Invalid Expression';
-            return false;
-        }
-        var opword = '';
-        while (i < characters.length && isOperator(characters[i])) {
-            opword += characters[i++];
-        }
-        if(opword.length > 2)
-            return false;
-    }
-
-    return isValid;
+    if(isValid)
+        return true;
+    currentError = 'Invalid Expression';
+    return false;
 }
 
 function hasError() {
