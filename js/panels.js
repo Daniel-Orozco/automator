@@ -46,8 +46,10 @@ function captureInput(e) {
                             return true;
                         }
                         var numword = '';
-                        while (!hasError() && i < characters.length && isNumber(characters[i]))
-                            numword += characters[i++];
+                        while (!hasError() && i < characters.length && isNumber(characters[i])) {
+                            numword += characters[i];
+                            i++;
+                        }
                         if(numword.length > 12) {
                             errorOutput('Overflow');
                             if(event.preventDefault) event.preventDefault();
