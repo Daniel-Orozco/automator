@@ -17,6 +17,10 @@ function overlay() {
 function captureInput(e) {
     var code = (e.keyCode ? e.keyCode : e.which);
     if (code == 13) { //Enter
+        numbers = new Stack();
+        operators = new Stack();
+        signs = new Stack();
+
         currentError = '';
         input = document.getElementById("input").value;
         command = input;
