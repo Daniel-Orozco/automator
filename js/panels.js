@@ -16,7 +16,7 @@ function overlay() {
 }
 function captureInput(e) {
     var code = (e.keyCode ? e.keyCode : e.which);
-    if (code == 13) { //Enter keycode
+    if (code == 13) { //Enter
         currentError = '';
         input = document.getElementById("input").value;
         command = input;
@@ -80,6 +80,16 @@ function captureInput(e) {
                     }
                     //Sign
                     else if((characters[i] == "+" || characters[i] == "-")&&(i==0 || isOperator(characters[i-1]))) {
+                        if(signs.getCount() > 0) {
+                            errorOutput('Invalid Expression');
+                            if(event.preventDefault) event.preventDefault();
+                            return true;
+                        }
+                        if(signs.peek() == '+') {
+                            errorOutput('Invalid Expression');
+                            if(event.preventDefault) event.preventDefault();
+                            return true;
+                        }
                         signs.push(characters[i]);
                         prevState = 'Sign';
                     }
