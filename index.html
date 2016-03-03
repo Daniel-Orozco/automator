@@ -30,8 +30,14 @@
     <div class="col-xs-12" style="height:20px;" id="message">
       Enter a valid operation on the text area above, ending with the equal sign (=), and press Enter.
     </div>
-    <div class="col-xs-12" style="height:50px;" data-toggle="tooltip" data-placement="top" title="This is the Operations area. All operations done are stored here, as well as their result and any possible error.">
+    <div class="col-xs-12" style="height:420px;" data-toggle="tooltip" data-placement="top" title="This is the Operations area. All operations done are stored here, as well as their result and any possible error.">
       <textarea id="operations" cols="80" rows="20" style="resize: none;" readonly ></textarea>
+    </div>
+    <div>
+    <div class="col-xs-12" style="height:60px;">
+      <p>Dec Result:    <textarea id="decimal" style="resize: none;" cols="40" rows ="1" readonly></textarea></p>     
+      <p>Hex Result:       <textarea id="hex" style="resize: none;" cols="40" rows ="1" readonly></textarea></p>
+      <p>Bin Result  :   <textarea id="binary" style="resize: none;" cols="40" rows ="1" readonly></textarea></p>
     </div>
 
     <div id="openModal" class="modalDialog">

@@ -65,6 +65,10 @@ function captureInput(e) {
                             switch(signs.pop()) {
                                 case "-":
                                     numbers.push(numbers.pop()*-1);
+                                    break;
+                                case "–":
+                                    numbers.push(numbers.pop()*-1);
+                                    break;
                             }
                         }
                         prevState = 'Number';
@@ -158,6 +162,9 @@ function errorOutput(type) {
     }
     document.getElementById('message').innerHTML = errorMsg;
     document.getElementById('input').value = "";
+    document.getElementById('decimal').value = "";
+    document.getElementById('hex').value = "";
+    document.getElementById('binary').value = "";
 
     var textArea = document.getElementById('operations');
     textArea.scrollTop = textArea.scrollHeight;
@@ -172,6 +179,9 @@ function validOutput() {
     document.getElementById("operations").innerHTML = txt;
     document.getElementById('message').innerHTML = " ";
     document.getElementById('input').value = "";
+    document.getElementById('decimal').value = result;
+    document.getElementById('hex').value = convertDecimal(result, 16);
+    document.getElementById('binary').value = convertDecimal(result, 2);
 
     var textArea = document.getElementById('operations');
     textArea.scrollTop = textArea.scrollHeight;
@@ -210,8 +220,8 @@ function applyOperation(operator, b, a) {
         errorOutput('Operator');
         return null;
     }
-    var upLim = 99999999999;
-    var lowLim = -99999999999;
+    var upLim = 999999999999;
+    var lowLim = -999999999999;
     if(a > upLim || a < lowLim || b > upLim || b < lowLim)
     {
         errorOutput('Overflow');
@@ -241,6 +251,19 @@ function applyOperation(operator, b, a) {
             command += currOp + (a-b) + "\n";
             return a - b;
             break;
+        case '–':
+            if((a - b) > upLim || (a - b) < lowLim)
+            {
+                errorOutput('Overflow');
+                return null;
+            }
+            if(command == input+"\n" && a == 0) {
+                return a - b;
+            }
+            command += currOp + (a-b) + "\n";
+            return a - b;
+            break;
+            break;
         case '*':
             if((a * b) > upLim || (a * b) < lowLim)
             {
@@ -269,8 +292,39 @@ function applyOperation(operator, b, a) {
     return 0;
 }
 
+function convertDecimal(num, base) {
+    if(num <= 0) return 0;
+    var remaining = num;
+    var digits = '';
+    var mod = 0;
+    while(remaining > 0) {
+        mod = parseInt(remaining % base);
+        switch(mod) {
+            case 10: digits += ('A');
+                break;
+            case 11: digits += ('B');
+                break;
+            case 12: digits += ('C');
+                break;
+            case 13: digits += ('D');
+                break;
+            case 14: digits += ('E');
+                break;
+            case 15: digits += ('F');
+                break;
+            default: digits += (mod);
+                break;    
+        }
+        remaining = parseInt(remaining / base);
+    }
+    return reverseString(digits);
+}
+
+function reverseString(s) {
+    return s.split("").reverse().join("");
+}
 function isOperator(chara) {
-    if(chara == '+' || chara == '-' || chara == '*' || chara == '/')
+    if(chara == '+' || chara == '-' || chara == '–' || chara == '*' || chara == '/')
         return true;
     return false;
 }
