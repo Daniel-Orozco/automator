@@ -34,11 +34,32 @@
       <textarea id="operations" cols="80" rows="20" style="resize: none;" readonly ></textarea>
     </div>
     <div>
-    <div class="col-xs-12" style="height:60px;">
-      <p>Dec Result:    <textarea id="decimal" style="resize: none;" cols="40" rows ="1" readonly></textarea></p>     
-      <p>Hex Result:       <textarea id="hex" style="resize: none;" cols="40" rows ="1" readonly></textarea></p>
-      <p>Bin Result  :   <textarea id="binary" style="resize: none;" cols="40" rows ="1" readonly></textarea></p>
-    </div>
+    <table class="table table-bordered" style="width:120px;">
+      <tr>
+        <td>
+          Dec Result:    <textarea id="decimal" style="resize: none;" cols="40" rows ="1" readonly></textarea>
+        </td>
+        <td>
+          Variable A:    <textarea id="varA" style="resize: none;" cols="34" rows ="1" readonly></textarea>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          Hex Result:       <textarea id="hex" style="resize: none;" cols="40" rows ="1" readonly></textarea>
+        </td>
+        <td>
+          Variable B:    <textarea id="varB" style="resize: none;" cols="34" rows ="1" readonly></textarea>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          Bin Result  :   <textarea id="binary" style="resize: none;" cols="40" rows ="1" readonly></textarea>
+        </td>
+        <td>
+          Variable C:    <textarea id="varC" style="resize: none;" cols="34" rows ="1" readonly></textarea>
+        </td>
+      </tr>
+    </table>
 
     <div id="openModal" class="modalDialog">
       <div>	<a href="#close" title="Close" class="close">X</a>
