@@ -22,25 +22,24 @@
           <span class="glyphicon glyphicon-question-sign"></span> Help
         </a>
       </h1>
-    </div>
+  </div>
 
     <div class="col-xs-12" style="height:30px;">
       <textarea id="input" cols="80" rows="1" style="resize: none;" maxlength="100" data-toggle="tooltip" data-placement="top" title="This is the Input area. Write a valid arithmetic operation, ending with =, and press Enter" onkeypress="captureInput(event, this)"></textarea>
     </div>
     <div class="col-xs-12" style="height:20px;" id="message">
-      Enter a valid operation on the text area above, ending with the equal sign (=), and press Enter.
+      Enter a valid operation on the text area above and press Enter.
     </div>
     <div class="col-xs-12" style="height:420px;" data-toggle="tooltip" data-placement="top" title="This is the Operations area. All operations done are stored here, as well as their result and any possible error.">
       <textarea id="operations" cols="80" rows="20" style="resize: none;" readonly ></textarea>
     </div>
-    <div>
     <table class="table table-bordered" style="width:120px;">
       <tr>
         <td>
           Dec Result:    <textarea id="decimal" style="resize: none;" cols="40" rows ="1" readonly></textarea>
         </td>
         <td>
-          Variable A:    <textarea id="varA" style="resize: none;" cols="34" rows ="1" readonly></textarea>
+          Variable A:    <textarea id="varA" style="resize: none;" cols="34" rows ="1" readonly>0</textarea>
         </td>
       </tr>
       <tr>
@@ -48,7 +47,7 @@
           Hex Result:       <textarea id="hex" style="resize: none;" cols="40" rows ="1" readonly></textarea>
         </td>
         <td>
-          Variable B:    <textarea id="varB" style="resize: none;" cols="34" rows ="1" readonly></textarea>
+          Variable B:    <textarea id="varB" style="resize: none;" cols="34" rows ="1" readonly>0</textarea>
         </td>
       </tr>
       <tr>
@@ -56,7 +55,7 @@
           Bin Result  :   <textarea id="binary" style="resize: none;" cols="40" rows ="1" readonly></textarea>
         </td>
         <td>
-          Variable C:    <textarea id="varC" style="resize: none;" cols="34" rows ="1" readonly></textarea>
+          Variable C:    <textarea id="varC" style="resize: none;" cols="34" rows ="1" readonly>0</textarea>
         </td>
       </tr>
     </table>

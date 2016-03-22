@@ -4,10 +4,15 @@ var input = '';
 var sectionbreak = '\n ------------------------------------------ \n';
 var result = 0;
 var prevState = '';
+var hasPoint = false;
 
 var numbers = new Stack();
 var operators = new Stack();
 var signs = new Stack();
+
+var varA = 0.0;
+var varB = 0.0;
+var varC = 0.0;
 
 var currentError = '';
 function overlay() {
@@ -55,12 +60,13 @@ function captureInput(e) {
                             i++;
                         }
                         i--;
-                        if(numword.length > 12) {
+                        if(hasPoint && numword.length > 98 || !hasPoint && numword.length > 99) {
                             errorOutput('Overflow');
                             if(event.preventDefault) event.preventDefault();
                             return true;
                         }
-                        numbers.push(parseInt(numword));
+                        hasPoint = false;
+                        numbers.push(parseFloat(numword));
                         if(signs.getCount()!=0) {
                             switch(signs.pop()) {
                                 case "-":
@@ -146,52 +152,56 @@ function errorOutput(type) {
     var errorMsg = type+" error. ";
     switch (type) {
         case 'Arithmetic':
-            errorMsg+="Remove any invalid arithmetic operation (i.e. divide by 0).";
+            errorMsg+="Remove arithmetic errors (divide by 0, square root of negative, etc.)";
             break;
         case 'Operator':
             errorMsg+="Operators cannot be stacked unless to denote negative numbers once.";
             break;
         case 'Overflow':
-            errorMsg+="A number has exceeded the max digit limit, which is 12.";
+            errorMsg+="A number has exceeded the max digit limit, which is 99.";
             break;
         case 'Invalid Expression':
-            errorMsg+="Only numbers, arithmetic operators and finishing equal sign are allowed.";
+            errorMsg+="Only numbers, variables, operators and equal sign are allowed.";
             break;
         default:
             break;
     }
     document.getElementById('message').innerHTML = errorMsg;
-    document.getElementById('input').value = "";
     document.getElementById('decimal').value = "";
     document.getElementById('hex').value = "";
     document.getElementById('binary').value = "";
+
+    commonOutput();
+}
+function commonOutput() {
+    document.getElementById('input').value = "";
+
+    document.getElementById('varA').value = varA;
+    document.getElementById('varB').value = varB;
+    document.getElementById('varC').value = varC;
 
     var textArea = document.getElementById('operations');
     textArea.scrollTop = textArea.scrollHeight;
 
     if(event.preventDefault) event.preventDefault();
 }
-
 function validOutput() {
     result = numbers.pop();
 
     txt = command + "= " + result + sectionbreak;
     document.getElementById("operations").innerHTML = txt;
     document.getElementById('message').innerHTML = " ";
-    document.getElementById('input').value = "";
     document.getElementById('decimal').value = result;
     document.getElementById('hex').value = convertDecimal(result, 16);
     document.getElementById('binary').value = convertDecimal(result, 2);
 
-    var textArea = document.getElementById('operations');
-    textArea.scrollTop = textArea.scrollHeight;
-
-    if(event.preventDefault) event.preventDefault();
+    commonOutput();
 }
 
 function isValid() {
     var isValid = false;
-    var re = /([ ]*[-+]?[0-9]{1,12})([ ]*[+-/*][ ]*[+-]?[0-9]{1,12})*([ ]*[=]{1}[ ]*)/g; //
+    var re = /[0-9A-Ca-c+-/*^()= ]/g;
+    //var re = /([ ]*[-+]?[0-9]{1,12})([ ]*[+-/*][ ]*[+-]?[0-9]{1,12})*([ ]*[=]{1}[ ]*)/g; //
 
     isValid = re.test(command);
     if(isValid)
@@ -284,8 +294,8 @@ function applyOperation(operator, b, a) {
                     errorOutput('Overflow');
                     return null;
                 }
-                command += currOp + (parseInt(a/b)) + "\n";
-                return parseInt(a / b);
+                command += currOp + (parseFloat(a/b)) + "\n";
+                return parseFloat(a / b);
             }
             break;
     }
@@ -298,7 +308,7 @@ function convertDecimal(num, base) {
     var digits = '';
     var mod = 0;
     while(remaining > 0) {
-        mod = parseInt(remaining % base);
+        mod = parseFloat(remaining % base);
         switch(mod) {
             case 10: digits += ('A');
                 break;
@@ -315,7 +325,7 @@ function convertDecimal(num, base) {
             default: digits += (mod);
                 break;    
         }
-        remaining = parseInt(remaining / base);
+        remaining = parseFloat(remaining / base);
     }
     return reverseString(digits);
 }
@@ -332,6 +342,10 @@ function isOperator(chara) {
 function isNumber(num) {
     if (num >= '0' && num <= '9')
         return true;
+    if(num == '.' && !hasPoint) {
+        hasPoint = true;
+        return true;
+    }
     return false;
 }
 
