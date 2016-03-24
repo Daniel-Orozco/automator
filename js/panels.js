@@ -5,7 +5,7 @@ var sectionbreak = '\n ------------------------------------------ \n';
 var result = 0;
 var prevState = '';
 var hasPoint = false;
-var saveOperation = false;
+var saveOperation = '';
 
 var numbers = new Stack();
 var operators = new Stack();
@@ -47,7 +47,7 @@ function captureInput(e) {
                         return true;
                     }
                     if(characters.length > 1 && isVariable(characters[i+1])) {
-                        saveOperation = true;
+                        saveOperation = characters[i+1];
                     }
                     else if(i != characters.length - 1)
                     {
@@ -198,6 +198,25 @@ function commonOutput() {
 }
 function validOutput() {
     result = numbers.pop();
+
+    switch(saveOperation) {
+        case 'A':
+            document.getElementById('varA').value = result;
+            varA = result;
+            break;
+        case 'B':
+            document.getElementById('varB').value = result;
+            varB = result;
+            break;
+        case 'C':
+            document.getElementById('varC').value = result;
+            varC = result;
+            break;
+        case '':
+            break;
+        default:
+            break;
+    }
 
     txt = command + "= " + result + sectionbreak;
     document.getElementById("operations").innerHTML = txt;
