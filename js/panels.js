@@ -5,6 +5,7 @@ var sectionbreak = '\n ------------------------------------------ \n';
 var result = 0;
 var prevState = '';
 var hasPoint = false;
+var saveOperation = false;
 
 var numbers = new Stack();
 var operators = new Stack();
@@ -27,6 +28,7 @@ function captureInput(e) {
         signs = new Stack();
 
         currentError = '';
+        saveOperation = false;
         input = document.getElementById("input").value;
         command = input;
         characters = command.split('');
@@ -39,7 +41,16 @@ function captureInput(e) {
                     continue;
                 }
                 if (characters[i] == '=') {
-                    if(i < characters.length -1) {
+                    if(characters.length > 1 && i < characters.length - 2) {
+                        errorOutput('Invalid Expression');
+                        if(event.preventDefault) event.preventDefault();
+                        return true;
+                    }
+                    if(characters.length > 1 && isVariable(characters[i+1])) {
+                        saveOperation = true;
+                    }
+                    else if(i != characters.length - 1)
+                    {
                         errorOutput('Invalid Expression');
                         if(event.preventDefault) event.preventDefault();
                         return true;
@@ -192,8 +203,8 @@ function validOutput() {
     document.getElementById("operations").innerHTML = txt;
     document.getElementById('message').innerHTML = " ";
     document.getElementById('decimal').value = result;
-    document.getElementById('hex').value = convertDecimal(result, 16);
-    document.getElementById('binary').value = convertDecimal(result, 2);
+    document.getElementById('hex').value = convertDecimal(parseInt(result), 16);
+    document.getElementById('binary').value = convertDecimal(parseInt(result), 2);
 
     commonOutput();
 }
@@ -202,7 +213,6 @@ function isValid() {
     var isValid = false;
     var re = /[0-9A-Ca-c+-/*^()= ]/g;
     //var re = /([ ]*[-+]?[0-9]{1,12})([ ]*[+-/*][ ]*[+-]?[0-9]{1,12})*([ ]*[=]{1}[ ]*)/g; //
-
     isValid = re.test(command);
     if(isValid)
         return true;
@@ -230,9 +240,8 @@ function applyOperation(operator, b, a) {
         errorOutput('Operator');
         return null;
     }
-    var upLim = 999999999999;
-    var lowLim = -999999999999;
-    if(a > upLim || a < lowLim || b > upLim || b < lowLim)
+    var limit = 8;
+    if(!inRange(a, limit) || !inRange(b, limit))
     {
         errorOutput('Overflow');
         return null;
@@ -241,7 +250,7 @@ function applyOperation(operator, b, a) {
     switch (operator)
     {
         case '+':
-            if((a + b) > upLim || (a + b) < lowLim)
+            if(!inRange(a+b, limit))
             {
                 errorOutput('Overflow');
                 return null;
@@ -250,7 +259,7 @@ function applyOperation(operator, b, a) {
             return a + b;
             break;
         case '-':
-            if((a - b) > upLim || (a - b) < lowLim)
+            if(!inRange(a-b, limit))
             {
                 errorOutput('Overflow');
                 return null;
@@ -262,7 +271,7 @@ function applyOperation(operator, b, a) {
             return a - b;
             break;
         case '–':
-            if((a - b) > upLim || (a - b) < lowLim)
+            if(!inRange(a-b, limit))
             {
                 errorOutput('Overflow');
                 return null;
@@ -275,7 +284,7 @@ function applyOperation(operator, b, a) {
             break;
             break;
         case '*':
-            if((a * b) > upLim || (a * b) < lowLim)
+            if(!inRange(a*b, limit))
             {
                 errorOutput('Overflow');
                 return null;
@@ -289,7 +298,7 @@ function applyOperation(operator, b, a) {
                 return null;
             }
             else {
-                if((a / b) > upLim || (a / b) < lowLim)
+                if(!inRange(a/b, limit))
                 {
                     errorOutput('Overflow');
                     return null;
@@ -298,10 +307,26 @@ function applyOperation(operator, b, a) {
                 return parseFloat(a / b);
             }
             break;
+        case '^':
+            if(!inRange(Math.pow(a,b),limit))
+            {
+                errorOutput('Overflow');
+                return null;
+            }
+            command += currOp + (parseFloat(Math.pow(a,b))) + "\n";
+            return parseFloat(Math.pow(a,b));
+            break;
     }
     return 0;
 }
-
+function countDigits(num) {
+    return (num + '').replace('.','').length;
+}
+function inRange(num, limit) {
+    if(countDigits(num) > limit)
+        return false;
+    return true;
+}
 function convertDecimal(num, base) {
     if(num <= 0) return 0;
     var remaining = num;
@@ -334,7 +359,13 @@ function reverseString(s) {
     return s.split("").reverse().join("");
 }
 function isOperator(chara) {
-    if(chara == '+' || chara == '-' || chara == '–' || chara == '*' || chara == '/')
+    if(chara == '+' || chara == '-' || chara == '–' || chara == '*' || chara == '/' || chara == '^')
+        return true;
+    return false;
+}
+
+function isVariable(chara) {
+    if(chara == 'A' || chara == 'B' || chara == 'C')
         return true;
     return false;
 }
