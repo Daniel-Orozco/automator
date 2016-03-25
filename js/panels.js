@@ -71,13 +71,17 @@ function captureInput(e) {
                             i++;
                         }
                         i--;
-                        if(hasPoint && numword.length > 98 || !hasPoint && numword.length > 99) {
+                        if(hasPoint && numword.length > 100 || !hasPoint && numword.length > 99) {
                             errorOutput('Overflow');
                             if(event.preventDefault) event.preventDefault();
                             return true;
                         }
-                        hasPoint = false;
-                        numbers.push(parseFloat(numword));
+                        if(countDigits(parseFloat(numword))>8) {
+                            numbers.push(parseFloat(numword).toExponential(8))
+                        }
+                        else {
+                            numbers.push(parseFloat(numword));
+                        }
                         if(signs.getCount()!=0) {
                             switch(signs.pop()) {
                                 case "-":
@@ -88,6 +92,7 @@ function captureInput(e) {
                                     break;
                             }
                         }
+                        hasPoint = false;
                         prevState = 'Number';
                     }
                     //Parenthesis
@@ -230,7 +235,7 @@ function validOutput() {
 
 function isValid() {
     var isValid = false;
-    var re = /[0-9A-Ca-c+-/*^()= ]/g;
+    var re = /[0-9A-Ca-ceE+-/*^()= ]/g;
     //var re = /([ ]*[-+]?[0-9]{1,12})([ ]*[+-/*][ ]*[+-]?[0-9]{1,12})*([ ]*[=]{1}[ ]*)/g; //
     isValid = re.test(command);
     if(isValid)
@@ -259,57 +264,66 @@ function applyOperation(operator, b, a) {
         errorOutput('Operator');
         return null;
     }
-    var limit = 8;
+    var limit = 99;
     if(!inRange(a, limit) || !inRange(b, limit))
     {
         errorOutput('Overflow');
         return null;
     }
     var currOp = a + " " + operator + " " + b + " = ";
+    var tempOp = 0;
     switch (operator)
     {
         case '+':
-            if(!inRange(a+b, limit))
+            tempOp = a+b;
+            if(!inRange(tempOp, limit))
             {
                 errorOutput('Overflow');
                 return null;
             }
-            command += currOp + (a+b) + "\n";
-            return a + b;
+            if(!inRange(tempOp, 8))
+            {
+                tempOp = tempOp.toExponential(8);
+            }
+            command += currOp + (tempOp) + "\n";
+            return tempOp;
             break;
+        case '–': //long dash
+            operator = '-';
         case '-':
-            if(!inRange(a-b, limit))
+            tempOp = a-b;
+            if(!inRange(tempOp, limit))
             {
                 errorOutput('Overflow');
                 return null;
             }
             if(command == input+"\n" && a == 0) {
-                return a - b;
+                if(!inRange(tempOp, 8))
+                {
+                    tempOp = tempOp.toExponential(8);
+                }
+                return tempOp;
             }
-            command += currOp + (a-b) + "\n";
-            return a - b;
-            break;
-        case '–':
-            if(!inRange(a-b, limit))
+            if(!inRange(tempOp, 8))
             {
-                errorOutput('Overflow');
-                return null;
+                tempOp = tempOp.toExponential(8);
             }
-            if(command == input+"\n" && a == 0) {
-                return a - b;
-            }
-            command += currOp + (a-b) + "\n";
-            return a - b;
-            break;
+            command += currOp + (tempOp) + "\n";
+            return tempOp;
             break;
         case '*':
-            if(!inRange(a*b, limit))
+            tempOp = a*b;
+            if(!inRange(tempOp, limit))
             {
                 errorOutput('Overflow');
                 return null;
             }
-            command += currOp + (a*b) + "\n";
-            return a * b;
+            if(!inRange(tempOp, 8))
+            {
+                tempOp = tempOp.toExponential(8);
+            }
+            command += currOp + (tempOp) + "\n";
+            return tempOp;
             break;
         case '/':
             if (b == 0) {
@@ -317,29 +331,39 @@ function applyOperation(operator, b, a) {
                 return null;
             }
             else {
-                if(!inRange(a/b, limit))
+                tempOp = a/b;
+                if(!inRange(tempOp, limit))
                 {
                     errorOutput('Overflow');
                     return null;
                 }
-                command += currOp + (parseFloat(a/b)) + "\n";
-                return parseFloat(a / b);
+                if(!inRange(tempOp, 8))
+                {
+                    tempOp = tempOp.toExponential(8);
+                }
+                command += currOp + (tempOp) + "\n";
+                return tempOp;
             }
             break;
         case '^':
-            if(!inRange(Math.pow(a,b),limit))
+            tempOp = Math.pow(a,b)
+            if(!inRange(tempOp,limit) && !inRange(b,2))
             {
                 errorOutput('Overflow');
                 return null;
+            };
+            if(!inRange(tempOp, 8))
+            {
+                tempOp = tempOp.toExponential(8);
             }
-            command += currOp + (parseFloat(Math.pow(a,b))) + "\n";
-            return parseFloat(Math.pow(a,b));
+            command += currOp + (tempOp) + "\n";
+            return tempOp;
             break;
     }
     return 0;
 }
 function countDigits(num) {
-    return (num + '').replace('.','').length;
+    return str = ((num + '').replace('.','')).replace('-','').length;
 }
 function inRange(num, limit) {
     if(countDigits(num) > limit)
