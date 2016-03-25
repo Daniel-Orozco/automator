@@ -58,8 +58,35 @@ function captureInput(e) {
                     break;
                 }
                 else if(!hasError()){
+                    //Variable
+                    if(isVariable(characters[i])) {
+                        if(prevState == 'Number') {
+                            errorOutput('Invalid Expression');
+                            if(event.preventDefault) event.preventDefault();
+                            return true;
+                        }
+                        var savedNum = loadNum(characters[i]);
+                        if(countDigits(savedNum)>8) {
+                            numbers.push(savedNum.toExponential(8))
+                        }
+                        else {
+                            numbers.push(savedNum);
+                        }
+                        if(signs.getCount()!=0) {
+                            switch(signs.pop()) {
+                                case "-":
+                                    numbers.push(numbers.pop()*-1);
+                                    break;
+                                case "–":
+                                    numbers.push(numbers.pop()*-1);
+                                    break;
+                            }
+                        }
+                        hasPoint = false;
+                        prevState = 'Number';
+                    }
                     //Number
-                    if (isNumber(characters[i])) {
+                    else if (isNumber(characters[i])) {
                         if(prevState == 'Number') {
                             errorOutput('Invalid Expression');
                             if(event.preventDefault) event.preventDefault();
@@ -408,7 +435,7 @@ function isOperator(chara) {
 }
 
 function isVariable(chara) {
-    if(chara == 'A' || chara == 'B' || chara == 'C')
+    if(chara >= 'A' && chara <= 'C')
         return true;
     return false;
 }
@@ -429,6 +456,23 @@ function higherOrder(op1, op2) {
     if ((op1 == '*' || op1 == '/') && (op2 == '+' || op2 == '-'))
         return false;
     return true;
+}
+
+function loadNum(variable) {
+    switch(variable) {
+        case 'A':
+            return varA;
+            break;
+        case 'B':
+            return varB;
+            break;
+        case 'C':
+            return varC;
+            break;
+        default:
+            return null;
+            break;
+    }
 }
 
 function Stack(){
