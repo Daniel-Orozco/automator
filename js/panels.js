@@ -37,6 +37,7 @@ function captureInput(e) {
         if (isValid()) {
             command += "\n";
             for (i = 0; !hasError() && i < characters.length; i++) {
+                alert('char '+characters[i]+" pos i "+i);
                 if (characters[i] == ' ') {
                     continue;
                 }
@@ -66,8 +67,11 @@ function captureInput(e) {
                             return true;
                         }
                         var savedNum = loadNum(characters[i]);
-                        if(countDigits(savedNum)>8) {
-                            numbers.push(savedNum.toExponential(8))
+                        alert(savedNum);
+                        if(!isExponential(savedNum) && countDigits(savedNum)>8) {
+                            alert("push "+savedNum );
+                            numbers.push(savedNum.toExponential(8));
+                            alert("pushed "+savedNum );
                         }
                         else {
                             numbers.push(savedNum);
@@ -82,6 +86,7 @@ function captureInput(e) {
                                     break;
                             }
                         }
+                        alert("has point");
                         hasPoint = false;
                         prevState = 'Number';
                     }
@@ -103,7 +108,7 @@ function captureInput(e) {
                             if(event.preventDefault) event.preventDefault();
                             return true;
                         }
-                        if(countDigits(parseFloat(numword))>8) {
+                        if(!isExponential(savedNum) && countDigits(parseFloat(numword))>8) {
                             numbers.push(parseFloat(numword).toExponential(8))
                         }
                         else {
@@ -259,7 +264,11 @@ function validOutput() {
 
     commonOutput();
 }
-
+function isExponential(num) {
+    if((num+'').indexOf('e') === -1)
+        return false;
+    return true;
+}
 function isValid() {
     var isValid = false;
     var re = /[0-9A-Ca-ceE+-/*^()= ]/g;
@@ -302,7 +311,7 @@ function applyOperation(operator, b, a) {
     switch (operator)
     {
         case '+':
-            tempOp = a+b;
+            tempOp = Math.a(a,b);
             if(!inRange(tempOp, limit))
             {
                 errorOutput('Overflow');
@@ -318,7 +327,7 @@ function applyOperation(operator, b, a) {
         case '–': //long dash
             operator = '-';
         case '-':
-            tempOp = a-b;
+            tempOp = Math.s(a,b);
             if(!inRange(tempOp, limit))
             {
                 errorOutput('Overflow');
@@ -339,7 +348,7 @@ function applyOperation(operator, b, a) {
             return tempOp;
             break;
         case '*':
-            tempOp = a*b;
+            tempOp = Math.m(a,b);
             if(!inRange(tempOp, limit))
             {
                 errorOutput('Overflow');
@@ -358,7 +367,7 @@ function applyOperation(operator, b, a) {
                 return null;
             }
             else {
-                tempOp = a/b;
+                tempOp = Math.d(a,b);
                 if(!inRange(tempOp, limit))
                 {
                     errorOutput('Overflow');
@@ -390,7 +399,8 @@ function applyOperation(operator, b, a) {
     return 0;
 }
 function countDigits(num) {
-    return str = ((num + '').replace('.','')).replace('-','').length;
+    alert("count str "+num );
+    return str = ((((num + '').replace('.','')).replace('-','')).replace('e','')).replace('+','').length;
 }
 function inRange(num, limit) {
     if(countDigits(num) > limit)
@@ -451,9 +461,37 @@ function isNumber(num) {
 }
 
 function higherOrder(op1, op2) {
-    if (op2 == '(' || op2 == ')')
-        return false;
-    if ((op1 == '*' || op1 == '/') && (op2 == '+' || op2 == '-'))
+    var rank = [-1, -1];
+    var ops = [op1, op2];
+    for(var i = 0; i < ops.length; i++){
+        switch (ops[i]) {
+            case '(':
+                rank[i] = 1;
+                break;
+            case ')':
+                rank[i] = 1;
+                break;
+            case '^':
+                rank[i] = 2;
+                break;
+            case '*':
+                rank[i] = 3;
+                break;
+            case '/':
+                rank[i] = 3;
+                break;
+            case '+':
+                rank[i] = 4;
+                break;
+            case '-':
+                rank[i] = 4;
+                break;
+            default:
+                rank[i] = null;
+                break;
+        }
+    }
+    if (rank[0] < rank[1])
         return false;
     return true;
 }
@@ -474,6 +512,39 @@ function loadNum(variable) {
             break;
     }
 }
+var _cf = (function() {
+    function _shift(x) {
+        var parts = x.toString().split('.');
+        return (parts.length < 2) ? 1 : Math.pow(10, parts[1].length);
+    }
+    return function() {
+        console.log(arguments);
+        return Array.prototype.reduce.call(arguments, function (prev, next) { return prev === undefined || next === undefined ? undefined : Math.max(prev, _shift (next)); }, -Infinity);
+    };
+})();
+
+Math.a = function () {
+    var f = _cf.apply(null, arguments); if(f === undefined) return undefined;
+    function cb(x, y, i, o) {
+        return x + ~~(f*y); //f * y; //
+    }
+    return Array.prototype.reduce.call(arguments, cb, 0) / f;
+};
+
+Math.s = function (l,r) { var f = _cf(l,r); return (~~(l * f) - ~~(r * f)) / f; };
+
+Math.m = function () {
+    var f = _cf.apply(null, arguments);
+    function cb(x, y, i, o) {
+        return ~~(x*f) * ~~(y*f) / (f * f);
+    }
+    return Array.prototype.reduce.call(arguments, cb, 1);
+};
+
+Math.d = function (l,r) {
+    var f = _cf(l,r);
+    return ~~(l * f) / ~~(r * f);
+};
 
 function Stack(){
     this.top = null;
