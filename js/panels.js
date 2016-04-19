@@ -5,6 +5,7 @@ var sectionbreak = '\n ------------------------------------------ \n';
 var result = 0;
 var prevState = '';
 var hasPoint = false;
+var hasExp = false;
 var saveOperation = '';
 
 var numbers = new Stack();
@@ -83,6 +84,7 @@ function captureInput(e) {
                             }
                         }
                         hasPoint = false;
+                        hasExp = false;
                         prevState = 'Number';
                     }
                     //Number
@@ -103,7 +105,7 @@ function captureInput(e) {
                             if(event.preventDefault) event.preventDefault();
                             return true;
                         }
-                        if(!isExponential(savedNum) && countDigits(parseFloat(numword))>8) {
+                        if(!isExponential(numword) && countDigits(parseFloat(numword))>8) {
                             numbers.push(parseFloat(numword).toExponential(8))
                         }
                         else {
@@ -120,6 +122,7 @@ function captureInput(e) {
                             }
                         }
                         hasPoint = false;
+                        hasExp = false;
                         prevState = 'Number';
                     }
                     //Parenthesis
@@ -449,6 +452,10 @@ function isNumber(num) {
         return true;
     if(num == '.' && !hasPoint) {
         hasPoint = true;
+        return true;
+    }
+    if(num == 'e' || num == 'E' && !hasExp) {
+        hasExp = true;
         return true;
     }
     return false;
