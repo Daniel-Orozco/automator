@@ -37,7 +37,6 @@ function captureInput(e) {
         if (isValid()) {
             command += "\n";
             for (i = 0; !hasError() && i < characters.length; i++) {
-                alert('char '+characters[i]+" pos i "+i);
                 if (characters[i] == ' ') {
                     continue;
                 }
@@ -67,11 +66,8 @@ function captureInput(e) {
                             return true;
                         }
                         var savedNum = loadNum(characters[i]);
-                        alert(savedNum);
                         if(!isExponential(savedNum) && countDigits(savedNum)>8) {
-                            alert("push "+savedNum );
                             numbers.push(savedNum.toExponential(8));
-                            alert("pushed "+savedNum );
                         }
                         else {
                             numbers.push(savedNum);
@@ -86,7 +82,6 @@ function captureInput(e) {
                                     break;
                             }
                         }
-                        alert("has point");
                         hasPoint = false;
                         prevState = 'Number';
                     }
@@ -399,7 +394,6 @@ function applyOperation(operator, b, a) {
     return 0;
 }
 function countDigits(num) {
-    alert("count str "+num );
     return str = ((((num + '').replace('.','')).replace('-','')).replace('e','')).replace('+','').length;
 }
 function inRange(num, limit) {
@@ -491,6 +485,8 @@ function higherOrder(op1, op2) {
                 break;
         }
     }
+    if (rank[1] == 1)
+        return false;
     if (rank[0] < rank[1])
         return false;
     return true;
