@@ -1,4 +1,4 @@
-var txt = '';
+﻿var txt = '';
 var command = '';
 var input = '';
 var sectionbreak = '\n ------------------------------------------ \n';
@@ -68,7 +68,7 @@ function captureInput(e) {
                         }
                         var savedNum = loadNum(characters[i]);
                         if(!isExponential(savedNum) && countDigits(savedNum)>8) {
-                            numbers.push(savedNum.toExponential(8));
+                            numbers.push(savedNum.toPrecision(8));
                         }
                         else {
                             numbers.push(savedNum);
@@ -100,7 +100,10 @@ function captureInput(e) {
                             i++;
                         }
                         i--;
-                        if(hasPoint && numword.length > 100 || !hasPoint && numword.length > 99) {
+                        var input_limit = 8;
+                        if(hasPoint) input_limit += 1;
+                        if(hasExp) input_limit += 4;
+                        if(numword.length > input_limit) {
                             errorOutput('Overflow');
                             if(event.preventDefault) event.preventDefault();
                             return true;
@@ -109,6 +112,7 @@ function captureInput(e) {
                             numbers.push(parseFloat(numword).toExponential(8))
                         }
                         else {
+                            alert(numword + " pushed");
                             numbers.push(parseFloat(numword));
                         }
                         if(signs.getCount()!=0) {
@@ -317,7 +321,7 @@ function applyOperation(operator, b, a) {
             }
             if(!inRange(tempOp, 8))
             {
-                tempOp = tempOp.toExponential(8);
+                tempOp = tempOp.toPrecision(8);
             }
             command += currOp + (tempOp) + "\n";
             return tempOp;
@@ -334,13 +338,13 @@ function applyOperation(operator, b, a) {
             if(command == input+"\n" && a == 0) {
                 if(!inRange(tempOp, 8))
                 {
-                    tempOp = tempOp.toExponential(8);
+                    tempOp = tempOp.toPrecision(8);
                 }
                 return tempOp;
             }
             if(!inRange(tempOp, 8))
             {
-                tempOp = tempOp.toExponential(8);
+                tempOp = tempOp.toPrecision(8);
             }
             command += currOp + (tempOp) + "\n";
             return tempOp;
@@ -354,7 +358,7 @@ function applyOperation(operator, b, a) {
             }
             if(!inRange(tempOp, 8))
             {
-                tempOp = tempOp.toExponential(8);
+                tempOp = tempOp.toPrecision(8);
             }
             command += currOp + (tempOp) + "\n";
             return tempOp;
@@ -373,7 +377,7 @@ function applyOperation(operator, b, a) {
                 }
                 if(!inRange(tempOp, 8))
                 {
-                    tempOp = tempOp.toExponential(8);
+                    tempOp = tempOp.toPrecision(8);
                 }
                 command += currOp + (tempOp) + "\n";
                 return tempOp;
@@ -388,7 +392,7 @@ function applyOperation(operator, b, a) {
             };
             if(!inRange(tempOp, 8))
             {
-                tempOp = tempOp.toExponential(8);
+                tempOp = tempOp.toPrecision(8);
             }
             command += currOp + (tempOp) + "\n";
             return tempOp;
@@ -454,7 +458,7 @@ function isNumber(num) {
         hasPoint = true;
         return true;
     }
-    if(num == 'e' || num == 'E' && !hasExp) {
+    if((num == 'e' || num == 'E') && !hasExp) {
         hasExp = true;
         return true;
     }
@@ -596,4 +600,18 @@ function Stack(){
             return out.data;
         }
     }
+}
+Number.prototype.todigits= function(){
+    var tem='', z, d, s= this.toString(),
+        x= s.match(/^(\d+)\.(\d+)[eE]([-+]?)(\d+)$/);
+    if(x){
+        d= x[2];
+        z= (x[3]== '-')? x[4]-1: x[4]-d.length;
+        while(z--)tem+='0';
+        if(x[3]== '-'){
+            return '0.'+tem+x[1]+d;
+        }
+        return x[1]+d+tem;
+    }
+    return s;
 }
