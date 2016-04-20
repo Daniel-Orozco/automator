@@ -45,7 +45,6 @@ function captureInput(e) {
                     i++;
                     var endword = '';
                     while (!hasError() && i < characters.length) {
-                        alert("i = " + i + "\ncharlength = " + characters.length + "\ncurrChar = " + characters[i])
                         if(!isVariable(characters[i]) && characters[i] != ' ') {
                             errorOutput('Invalid Expression');
                             if(event.preventDefault) event.preventDefault();
@@ -108,6 +107,37 @@ function captureInput(e) {
                             if(event.preventDefault) event.preventDefault();
                             return true;
                         }
+                        if(prevState == 'Exponential') {
+                            i++;
+                            var expword = '';
+                            while(i < characters.length && !isOperator(characters[i]) && characters[i] != '=') {
+                                if(!isNumber(characters[i]) && characters[i] != ' ') {
+                                    if(characters[i] == '-') {
+                                        if(prevState != 'Operator') {
+                                            prevState = 'Operator'
+                                            expword += characters[i];
+                                            continue;
+                                        }
+                                        else {
+                                            errorOutput('Invalid Expression');
+                                            if(event.preventDefault) event.preventDefault();
+                                            return true;
+                                        }
+                                    }
+                                    errorOutput('Invalid Expression');
+                                    if(event.preventDefault) event.preventDefault();
+                                    return true;
+                                }
+                                expword += characters[i];
+                                i++;
+                            }
+                            if (!isNumber(parseFloat(expword))){
+                                errorOutput('Invalid Expression');
+                                if(event.preventDefault) event.preventDefault();
+                                return true;
+                            }
+                            i--;
+                        }
                         var numword = '';
                         while (!hasError() && i < characters.length && isNumber(characters[i]) || (hasExp && (characters[i] == '-' || characters[i] == '–'))) {
                             numword += characters[i];
@@ -115,7 +145,11 @@ function captureInput(e) {
                         }
                         i--;
                         var input_limit = 8;
-                        if(hasPoint) input_limit += 1;
+                        if(hasPoint)
+                            if(numword.charAt(0) == '0' && numword.charAt(1) == '.')
+                                input_limit++;
+                            input_limit++;
+
                         if(hasExp) input_limit += 4;
                         if(numword.length > input_limit) {
                             errorOutput('Overflow');
@@ -123,6 +157,7 @@ function captureInput(e) {
                             return true;
                         }
                         if(!isExponential(numword) && countDigits(parseFloat(numword))>8) {
+                            alert('aqui');
                             numbers.push(parseFloat(numword).toExponential(8))
                         }
                         else {
@@ -382,7 +417,7 @@ function applyOperation(operator, b, a) {
                 return null;
             }
             else {
-                tempOp = Math.d(a,b);
+                tempOp = Math.d(a,b).toPrecision(8);
                 if(!inRange(tempOp, limit))
                 {
                     errorOutput('Overflow');
@@ -414,7 +449,31 @@ function applyOperation(operator, b, a) {
     return 0;
 }
 function countDigits(num) {
-    return str = ((((num + '').replace('.','')).replace('-','')).replace('e','')).replace('+','').length;
+    //var str = ((((num + '').replace('.','')).replace('-','')).replace('e','')).replace('+','').length;
+    var count = 0;
+    for(var i = 0; i < num.length; i++)
+    {
+        alert("i: " + i + "\ncount: "+count + "\nchar: "+num.charAt(i));
+        if(num.charAt(i) >= 0 && num.charAt(i) <= 9)
+            count++;
+        if(num.charAt(i) == '.') {
+            var j = i - 1;
+            var newCount = 0;
+            if(num.charAt(j) == 0) {
+                while(j >= 0) {
+                    alert("j: " + j + "\ncount: "+count + "\nnewCount: "+newCount+"\nchar: "+num.charAt(i));
+                    if(num.charAt(j) != 0) {
+                        newCount = 0;
+                        break;
+                    }
+                    newCount++;
+                    j--;
+                }
+            }
+            count -= newCount;
+        }
+    }
+    return count;
 }
 function inRange(num, limit) {
     if(countDigits(num) > limit)
@@ -457,6 +516,11 @@ function isOperator(chara) {
         return true;
     return false;
 }
+function isDecimal(wrd) {
+    var num = parseFloat(wrd);
+    var str = num.toString();
+    return str;
+}
 
 function isVariable(chara) {
     if(chara >= 'A' && chara <= 'C')
@@ -472,6 +536,7 @@ function isNumber(num) {
         return true;
     }
     if((num == 'e' || num == 'E') && !hasExp) {
+        prevState = "Exponential";
         hasExp = true;
         return true;
     }
@@ -501,6 +566,7 @@ function higherOrder(op1, op2) {
             case '+':
                 rank[i] = 4;
                 break;
+            case '–':
             case '-':
                 rank[i] = 4;
                 break;
@@ -613,18 +679,4 @@ function Stack(){
             return out.data;
         }
     }
-}
-Number.prototype.todigits= function(){
-    var tem='', z, d, s= this.toString(),
-        x= s.match(/^(\d+)\.(\d+)[eE]([-+]?)(\d+)$/);
-    if(x){
-        d= x[2];
-        z= (x[3]== '-')? x[4]-1: x[4]-d.length;
-        while(z--)tem+='0';
-        if(x[3]== '-'){
-            return '0.'+tem+x[1]+d;
-        }
-        return x[1]+d+tem;
-    }
-    return s;
 }
