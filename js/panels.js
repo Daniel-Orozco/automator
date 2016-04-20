@@ -42,20 +42,34 @@ function captureInput(e) {
                     continue;
                 }
                 if (characters[i] == '=') {
-                    if(characters.length > 1 && i < characters.length - 2) {
-                        errorOutput('Invalid Expression');
-                        if(event.preventDefault) event.preventDefault();
-                        return true;
+                    i++;
+                    var endword = '';
+                    while (!hasError() && i < characters.length) {
+                        alert("i = " + i + "\ncharlength = " + characters.length + "\ncurrChar = " + characters[i])
+                        if(!isVariable(characters[i]) && characters[i] != ' ') {
+                            errorOutput('Invalid Expression');
+                            if(event.preventDefault) event.preventDefault();
+                            return true;
+                        }
+                        else if(isVariable(characters[i])) {
+                            i++;
+                            while(i < characters.length) {
+                                if(characters[i] != ' ') {
+                                    errorOutput('Invalid Expression');
+                                    if(event.preventDefault) event.preventDefault();
+                                    return true;
+                                }
+                                i++;
+                            }
+                            i--;
+                            saveOperation = characters[i];
+                        }
+                        endword += characters[i];
+                        i++;
                     }
-                    if(characters.length > 1 && isVariable(characters[i+1])) {
-                        saveOperation = characters[i+1];
-                    }
-                    else if(i != characters.length - 1)
-                    {
-                        errorOutput('Invalid Expression');
-                        if(event.preventDefault) event.preventDefault();
-                        return true;
-                    }
+                    i--;
+
+                    //
                     break;
                 }
                 else if(!hasError()){
@@ -95,7 +109,7 @@ function captureInput(e) {
                             return true;
                         }
                         var numword = '';
-                        while (!hasError() && i < characters.length && isNumber(characters[i])) {
+                        while (!hasError() && i < characters.length && isNumber(characters[i]) || (hasExp && (characters[i] == '-' || characters[i] == '–'))) {
                             numword += characters[i];
                             i++;
                         }
@@ -112,7 +126,6 @@ function captureInput(e) {
                             numbers.push(parseFloat(numword).toExponential(8))
                         }
                         else {
-                            alert(numword + " pushed");
                             numbers.push(parseFloat(numword));
                         }
                         if(signs.getCount()!=0) {
