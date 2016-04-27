@@ -24,15 +24,27 @@ function overlay() {
 function captureInput(e) {
     var code = (e.keyCode ? e.keyCode : e.which);
     if (code == 13) { //Enter
+        txt = '';
+        command = '';
+        input = '';
+        sectionbreak = '\n ------------------------------------------ \n';
+        result = 0;
+        prevState = '';
+        hasPoint = false;
+        hasExp = false;
+        saveOperation = '';
+
         numbers = new Stack();
         operators = new Stack();
         signs = new Stack();
 
         currentError = '';
-        saveOperation = false;
+
+        //
+
         input = document.getElementById("input").value;
-        command = input.replace(/\s+/g, '');
-        characters = command.split('');
+        command = input;
+        characters = input.replace(/\s+/g, '').split('');
         prevState = '';
 
         if (isValid()) {
