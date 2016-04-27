@@ -12,9 +12,9 @@ var numbers = new Stack();
 var operators = new Stack();
 var signs = new Stack();
 
-var varA = 0.0;
-var varB = 0.0;
-var varC = 0.0;
+var varA = new Big(0.0);
+var varB = new Big(0.0);
+var varC = new Big(0.0);
 
 var currentError = '';
 function overlay() {
@@ -31,7 +31,7 @@ function captureInput(e) {
         currentError = '';
         saveOperation = false;
         input = document.getElementById("input").value;
-        command = input;
+        command = input.replace(/\s+/g, '');
         characters = command.split('');
         prevState = '';
 
@@ -80,19 +80,14 @@ function captureInput(e) {
                             return true;
                         }
                         var savedNum = loadNum(characters[i]);
-                        if(!isExponential(savedNum) && countDigits(savedNum)>8) {
-                            numbers.push(savedNum.toPrecision(8));
-                        }
-                        else {
-                            numbers.push(savedNum);
-                        }
+                        numbers.push(formatNumber(savedNum));
                         if(signs.getCount()!=0) {
                             switch(signs.pop()) {
                                 case "-":
-                                    numbers.push(numbers.pop()*-1);
+                                    numbers.push(numbers.pop().times(-1));
                                     break;
                                 case "–":
-                                    numbers.push(numbers.pop()*-1);
+                                    numbers.push(numbers.pop().times(-1));
                                     break;
                             }
                         }
@@ -151,25 +146,32 @@ function captureInput(e) {
                             input_limit++;
 
                         if(hasExp) input_limit += 4;
-                        if(numword.length > input_limit) {
+                        /**if(numword.length > input_limit) {
                             errorOutput('Overflow');
                             if(event.preventDefault) event.preventDefault();
                             return true;
-                        }
-                        if(!isExponential(numword) && countDigits(parseFloat(numword))>8) {
-                            alert('aqui');
-                            numbers.push(parseFloat(numword).toExponential(8))
+                        }**/
+                        var nn = new Big(numword);
+                        if(nn.c.length > 8) {
+                            alert('nn '+nn);
+                            nn.c.length = 8;
+                            alert('nn '+nn);
+                            ns = new Big(nn.toString());
+                            if(ns.eq(nn)) {
+                                numbers.push(nn.toExponential(8));
+                            }
+                            else numbers.push(nn);
                         }
                         else {
-                            numbers.push(parseFloat(numword));
+                            numbers.push(nn);
                         }
                         if(signs.getCount()!=0) {
                             switch(signs.pop()) {
                                 case "-":
-                                    numbers.push(numbers.pop()*-1);
+                                    numbers.push(numbers.pop().times(-1));
                                     break;
                                 case "–":
-                                    numbers.push(numbers.pop()*-1);
+                                    numbers.push(numbers.pop().times(-1));
                                     break;
                             }
                         }
@@ -288,16 +290,16 @@ function validOutput() {
 
     switch(saveOperation) {
         case 'A':
-            document.getElementById('varA').value = result;
-            varA = result;
+            document.getElementById('varA').value = result.toString();
+            varA = new Big(result);
             break;
         case 'B':
-            document.getElementById('varB').value = result;
-            varB = result;
+            document.getElementById('varB').value = result.toString();
+            varB = new Big(result);
             break;
         case 'C':
-            document.getElementById('varC').value = result;
-            varC = result;
+            document.getElementById('varC').value = result.toString();
+            varC = new Big(result);
             break;
         case '':
             break;
@@ -345,6 +347,8 @@ function pushNumber(num) {
     return false;
 }
 function applyOperation(operator, b, a) {
+    alert('applyOperation' + operator + " " + b + " " + a);
+    var ns = new Big(0);
     if(a == null || b == null)
     {
         errorOutput('Operator');
@@ -357,56 +361,39 @@ function applyOperation(operator, b, a) {
         return null;
     }
     var currOp = a + " " + operator + " " + b + " = ";
-    var tempOp = 0;
+    var tempOp = new Big(0);
     switch (operator)
     {
         case '+':
-            tempOp = Math.a(a,b);
-            if(!inRange(tempOp, limit))
-            {
-                errorOutput('Overflow');
-                return null;
-            }
-            if(!inRange(tempOp, 8))
-            {
-                tempOp = tempOp.toPrecision(8);
-            }
+            tempOp = a.plus(b);
+            tempOp = formatNumber(tempOp);
             command += currOp + (tempOp) + "\n";
+            alert("tempOp: "+tempOp);
             return tempOp;
             break;
         case '–': //long dash
             operator = '-';
         case '-':
-            tempOp = Math.s(a,b);
-            if(!inRange(tempOp, limit))
-            {
-                errorOutput('Overflow');
-                return null;
-            }
-            if(command == input+"\n" && a == 0) {
-                if(!inRange(tempOp, 8))
-                {
-                    tempOp = tempOp.toPrecision(8);
+            tempOp = a.minus(b);
+            if(tempOp.c.length > 8) {
+                tempOp.c.length = 8;
+                ns = new Big(tempOp.toString());
+                if (ns.eq(tempOp)) {
+                    tempOp = tempOp.toExponential(8);
                 }
-                return tempOp;
-            }
-            if(!inRange(tempOp, 8))
-            {
-                tempOp = tempOp.toPrecision(8);
             }
             command += currOp + (tempOp) + "\n";
             return tempOp;
             break;
         case '*':
-            tempOp = Math.m(a,b);
-            if(!inRange(tempOp, limit))
-            {
-                errorOutput('Overflow');
-                return null;
-            }
-            if(!inRange(tempOp, 8))
-            {
-                tempOp = tempOp.toPrecision(8);
+            alert(a+" times "+b);
+            tempOp = a.times(b);
+            if(tempOp.c.length > 8) {
+                tempOp.c.length = 8;
+                ns = new Big(tempOp.toString());
+                if (ns.eq(tempOp)) {
+                    tempOp = tempOp.toExponential(8);
+                }
             }
             command += currOp + (tempOp) + "\n";
             return tempOp;
@@ -417,30 +404,27 @@ function applyOperation(operator, b, a) {
                 return null;
             }
             else {
-                tempOp = Math.d(a,b).toPrecision(8);
-                if(!inRange(tempOp, limit))
-                {
-                    errorOutput('Overflow');
-                    return null;
-                }
-                if(!inRange(tempOp, 8))
-                {
-                    tempOp = tempOp.toPrecision(8);
+                tempOp = a.div(b);
+                if(tempOp.c.length > 8) {
+                    tempOp.c.length = 8;
+                    ns = new Big(tempOp.toString());
+                    if (ns.eq(tempOp)) {
+                        tempOp = tempOp.toExponential(8);
+                    }
                 }
                 command += currOp + (tempOp) + "\n";
                 return tempOp;
             }
             break;
         case '^':
-            tempOp = Math.pow(a,b)
-            if(!inRange(tempOp,limit) && !inRange(b,2))
-            {
-                errorOutput('Overflow');
-                return null;
-            };
-            if(!inRange(tempOp, 8))
-            {
-                tempOp = tempOp.toPrecision(8);
+            alert(a+".pow("+b);
+            tempOp = new Big(Math.pow(parseFloat(a),parseFloat(b)));
+            if(tempOp.c.length > 8) {
+                tempOp.c.length = 8;
+                ns = new Big(tempOp.toString());
+                if (ns.eq(tempOp)) {
+                    tempOp = tempOp.toExponential(8);
+                }
             }
             command += currOp + (tempOp) + "\n";
             return tempOp;
@@ -449,11 +433,9 @@ function applyOperation(operator, b, a) {
     return 0;
 }
 function countDigits(num) {
-    //var str = ((((num + '').replace('.','')).replace('-','')).replace('e','')).replace('+','').length;
     var count = 0;
     for(var i = 0; i < num.length; i++)
     {
-        alert("i: " + i + "\ncount: "+count + "\nchar: "+num.charAt(i));
         if(num.charAt(i) >= 0 && num.charAt(i) <= 9)
             count++;
         if(num.charAt(i) == '.') {
@@ -461,7 +443,6 @@ function countDigits(num) {
             var newCount = 0;
             if(num.charAt(j) == 0) {
                 while(j >= 0) {
-                    alert("j: " + j + "\ncount: "+count + "\nnewCount: "+newCount+"\nchar: "+num.charAt(i));
                     if(num.charAt(j) != 0) {
                         newCount = 0;
                         break;
@@ -542,7 +523,32 @@ function isNumber(num) {
     }
     return false;
 }
-
+function formatNumber(num) {
+    var x;
+    alert("format "+num);
+    if(num.c.length > 8) {
+        num.c.length = 8;
+        var ns = new Big(num.toString());
+        if (ns.eq(num)) {
+            if(num.eq(new Big(parseInt(num.toString())))) {
+                x = new Big(parseInt(num.toString()));
+                alert(x);
+                return x;
+            }
+            else {
+                x = new Big(num.toExponential(8));
+                alert(x);
+                return x;
+            }
+        }
+    }
+    if(num.eq(new Big(parseInt(num.toString())))) {
+        x = new Big(parseInt(num.toString()));
+        alert(x);
+        return x;
+    }
+    return num;
+}
 function higherOrder(op1, op2) {
     var rank = [-1, -1];
     var ops = [op1, op2];
