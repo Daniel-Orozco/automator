@@ -147,10 +147,25 @@ function captureInput(e) {
                         }
                         var numword = '';
                         while (!hasError() && i < characters.length && isNumber(characters[i]) || (hasExp && (characters[i] == '-' || characters[i] == '–'))) {
+                            alert("numword "+numword+"\ni: "+i);
                             numword += characters[i];
+                            if(hasExp && isDigit(parseInt(characters[i]))) {
+                                hasExp = false;
+                            }
                             i++;
                         }
                         i--;
+                        if(isNaN(numword)) {
+                            alert("NaN");
+                            errorOutput('Invalid Expression');
+                            if(event.preventDefault) event.preventDefault();
+                            return true;
+                        }
+                        /**if(numword.length > input_limit) {
+                            errorOutput('Overflow');
+                            if(event.preventDefault) event.preventDefault();
+                            return true;
+                        }**/
                         var input_limit = 8;
                         if(hasPoint)
                             if(numword.charAt(0) == '0' && numword.charAt(1) == '.')
@@ -520,7 +535,11 @@ function isVariable(chara) {
         return true;
     return false;
 }
-
+function isDigit(num) {
+    if (num >= '0' && num <= '9')
+        return true;
+    return false;
+}
 function isNumber(num) {
     if (num >= '0' && num <= '9')
         return true;
