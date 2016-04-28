@@ -146,7 +146,6 @@ function captureInput(e) {
                             i--;
                         }
                         var numword = '';
-                        alert("char[i]: "+characters[i] + "\ni: " + i+"\nlength: "+characters.length);
                         while (!hasError() && i < characters.length && isNumber(characters[i]) || (hasExp && (characters[i] == '-' || characters[i] == '–'))) {
                             numword += characters[i];
                             if(hasExp && isDigit(parseInt(characters[i]))) {
@@ -311,7 +310,6 @@ function commonOutput() {
 }
 function validOutput() {
     result = numbers.pop()
-    alert("result: "+result);
 
     switch(saveOperation) {
         case 'A':
@@ -422,9 +420,7 @@ function applyOperation(operator, b, a) {
             break;
         case '^':
             tempOp = new Big(Math.pow(parseFloat(a),parseFloat(b)));
-            alert("^ "+tempOp.toString());
             tempOp = formatNumber(tempOp);
-            alert("= "+tempOp.toString());
             command += currOp + (tempOp) + "\n";
             return tempOp;
             break;
@@ -528,7 +524,6 @@ function isNumber(num) {
     return false;
 }
 function formatNumber(num) {
-    alert("format "+num.toString());
     var x;
     if(num.c.length > 8) {
         num.c.length = 8;
@@ -536,12 +531,10 @@ function formatNumber(num) {
         if (!ns.eq(num)) {
             if(num.eq(new Big(parseInt(num.toString())))) {
                 x = new Big(parseInt(num.toString()));
-                alert("format eq "+num.toString());
                 return x;
             }
             else {
                 x = new Big(num.toExponential(8));
-                alert("format noeq "+num.toString());
                 return x;
             }
         }
