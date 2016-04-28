@@ -146,8 +146,8 @@ function captureInput(e) {
                             i--;
                         }
                         var numword = '';
+                        alert("char[i]: "+characters[i] + "\ni: " + i+"\nlength: "+characters.length);
                         while (!hasError() && i < characters.length && isNumber(characters[i]) || (hasExp && (characters[i] == '-' || characters[i] == '–'))) {
-                            alert("numword "+numword+"\ni: "+i);
                             numword += characters[i];
                             if(hasExp && isDigit(parseInt(characters[i]))) {
                                 hasExp = false;
@@ -156,7 +156,6 @@ function captureInput(e) {
                         }
                         i--;
                         if(isNaN(numword)) {
-                            alert("NaN");
                             errorOutput('Invalid Expression');
                             if(event.preventDefault) event.preventDefault();
                             return true;
@@ -180,9 +179,7 @@ function captureInput(e) {
                         }**/
                         var nn = new Big(numword);
                         if(nn.c.length > 8) {
-                            alert('nn '+nn);
                             nn.c.length = 8;
-                            alert('nn '+nn);
                             ns = new Big(nn.toString());
                             if(ns.eq(nn)) {
                                 numbers.push(nn.toExponential(8));
@@ -313,7 +310,8 @@ function commonOutput() {
     if(event.preventDefault) event.preventDefault();
 }
 function validOutput() {
-    result = numbers.pop();
+    result = numbers.pop()
+    alert("result: "+result);
 
     switch(saveOperation) {
         case 'A':
@@ -374,7 +372,6 @@ function pushNumber(num) {
     return false;
 }
 function applyOperation(operator, b, a) {
-    alert('applyOperation' + operator + " " + b + " " + a);
     var ns = new Big(0);
     if(a == null || b == null)
     {
@@ -395,33 +392,19 @@ function applyOperation(operator, b, a) {
             tempOp = a.plus(b);
             tempOp = formatNumber(tempOp);
             command += currOp + (tempOp) + "\n";
-            alert("tempOp: "+tempOp);
             return tempOp;
             break;
         case '–': //long dash
             operator = '-';
         case '-':
             tempOp = a.minus(b);
-            if(tempOp.c.length > 8) {
-                tempOp.c.length = 8;
-                ns = new Big(tempOp.toString());
-                if (ns.eq(tempOp)) {
-                    tempOp = tempOp.toExponential(8);
-                }
-            }
+            tempOp = formatNumber(tempOp);
             command += currOp + (tempOp) + "\n";
             return tempOp;
             break;
         case '*':
-            alert(a+" times "+b);
             tempOp = a.times(b);
-            if(tempOp.c.length > 8) {
-                tempOp.c.length = 8;
-                ns = new Big(tempOp.toString());
-                if (ns.eq(tempOp)) {
-                    tempOp = tempOp.toExponential(8);
-                }
-            }
+            tempOp = formatNumber(tempOp);
             command += currOp + (tempOp) + "\n";
             return tempOp;
             break;
@@ -432,27 +415,16 @@ function applyOperation(operator, b, a) {
             }
             else {
                 tempOp = a.div(b);
-                if(tempOp.c.length > 8) {
-                    tempOp.c.length = 8;
-                    ns = new Big(tempOp.toString());
-                    if (ns.eq(tempOp)) {
-                        tempOp = tempOp.toExponential(8);
-                    }
-                }
+                tempOp = formatNumber(tempOp);
                 command += currOp + (tempOp) + "\n";
                 return tempOp;
             }
             break;
         case '^':
-            alert(a+".pow("+b);
             tempOp = new Big(Math.pow(parseFloat(a),parseFloat(b)));
-            if(tempOp.c.length > 8) {
-                tempOp.c.length = 8;
-                ns = new Big(tempOp.toString());
-                if (ns.eq(tempOp)) {
-                    tempOp = tempOp.toExponential(8);
-                }
-            }
+            alert("^ "+tempOp.toString());
+            tempOp = formatNumber(tempOp);
+            alert("= "+tempOp.toString());
             command += currOp + (tempOp) + "\n";
             return tempOp;
             break;
@@ -544,7 +516,8 @@ function isNumber(num) {
     if (num >= '0' && num <= '9')
         return true;
     if(num == '.' && !hasPoint) {
-        hasPoint = true;
+        if(i != 0)
+            hasPoint = true;
         return true;
     }
     if((num == 'e' || num == 'E') && !hasExp) {
@@ -555,27 +528,26 @@ function isNumber(num) {
     return false;
 }
 function formatNumber(num) {
+    alert("format "+num.toString());
     var x;
-    alert("format "+num);
     if(num.c.length > 8) {
         num.c.length = 8;
         var ns = new Big(num.toString());
-        if (ns.eq(num)) {
+        if (!ns.eq(num)) {
             if(num.eq(new Big(parseInt(num.toString())))) {
                 x = new Big(parseInt(num.toString()));
-                alert(x);
+                alert("format eq "+num.toString());
                 return x;
             }
             else {
                 x = new Big(num.toExponential(8));
-                alert(x);
+                alert("format noeq "+num.toString());
                 return x;
             }
         }
     }
     if(num.eq(new Big(parseInt(num.toString())))) {
         x = new Big(parseInt(num.toString()));
-        alert(x);
         return x;
     }
     return num;
