@@ -17,6 +17,10 @@ var varB = new Big(0.0);
 var varC = new Big(0.0);
 
 var currentError = '';
+var currentFormat = 'FIXED';
+
+var precision = 8;
+
 function overlay() {
     el = document.getElementById("overlay");
     el.style.visibility = (el.style.visibility == "visible") ? "hidden" : "visible";
@@ -39,7 +43,6 @@ function captureInput(e) {
         signs = new Stack();
 
         currentError = '';
-
         //
 
         input = document.getElementById("input").value;
@@ -241,6 +244,11 @@ function captureInput(e) {
                         operators.push(characters[i]);
                         prevState = 'Operator';
                     }
+                    /*else if (i == 1){
+                        while (!hasError() && ) {
+
+                        }
+                    }*/
                     else {
                         errorOutput('Invalid Expression');
                         if(event.preventDefault) event.preventDefault();
@@ -524,20 +532,41 @@ function isNumber(num) {
     return false;
 }
 function formatNumber(num) {
+    alert("Format!");
     var x;
-    if(num.c.length > 8) {
-        num.c.length = 8;
-        var ns = new Big(num.toString());
-        if (!ns.eq(num)) {
-            if(num.eq(new Big(parseInt(num.toString())))) {
-                x = new Big(parseInt(num.toString()));
-                return x;
+    currentFormat = 'SCIENTIFIC';
+    switch (currentFormat) {
+        case 'FIXED':
+            x = new Big(parseFloat(num.toFixed(precision)));
+            return x;
+            break;
+        case 'REAL':
+            x = new Big(parseFloat(num.toString()));
+            return x;
+            break;
+        case 'SCIENTIFIC':
+            alert("Scientific!");
+            x = new Big(num.toExponential(precision));
+            alert("x "+x+"\nnum "+num.toString()+"\ntoExp "+num.toExponential(precision));
+            return x;
+            break;
+        case 'STANDARD':
+            precision = 8;
+            if(num.c.length > precision) {
+                num.c.length = precision;
+                var ns = new Big(num.toString());
+                if (!ns.eq(num)) {
+                    if(num.eq(new Big(parseInt(num.toString())))) {
+                        x = new Big(parseInt(num.toString()));
+                        return x;
+                    }
+                    else {
+                        x = new Big(num.toExponential(precision));
+                        return x;
+                    }
+                }
             }
-            else {
-                x = new Big(num.toExponential(8));
-                return x;
-            }
-        }
+            break;
     }
     if(num.eq(new Big(parseInt(num.toString())))) {
         x = new Big(parseInt(num.toString()));
