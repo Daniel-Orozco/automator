@@ -7,6 +7,11 @@ var prevState = '';
 var hasPoint = false;
 var hasExp = false;
 var saveOperation = '';
+var prevCommand = '';
+
+var isFormat = false;
+var currFormat = 'STANDARD';
+var precision = 8;
 
 var numbers = new Stack();
 var operators = new Stack();
@@ -15,6 +20,9 @@ var signs = new Stack();
 var varA = new Big(0.0);
 var varB = new Big(0.0);
 var varC = new Big(0.0);
+
+var characters = [];
+var i = 0;
 
 var currentError = '';
 function overlay() {
@@ -32,7 +40,9 @@ function captureInput(e) {
         prevState = '';
         hasPoint = false;
         hasExp = false;
+        isFormat = false;
         saveOperation = '';
+        prevCommand = '';
 
         numbers = new Stack();
         operators = new Stack();
@@ -47,6 +57,7 @@ function captureInput(e) {
         characters = input.replace(/\s+/g, '').split('');
         prevState = '';
 
+        debugger;
         if (isValid()) {
             command += "\n";
             for (i = 0; !hasError() && i < characters.length; i++) {
@@ -83,47 +94,108 @@ function captureInput(e) {
                     //
                     break;
                 }
-                else if(!hasError()){
-                    //Variable
-                    if(isVariable(characters[i])) {
-                        if(prevState == 'Number') {
-                            errorOutput('Invalid Expression');
-                            if(event.preventDefault) event.preventDefault();
-                            return true;
-                        }
-                        var savedNum = loadNum(characters[i]);
-                        numbers.push(formatNumber(savedNum));
-                        if(signs.getCount()!=0) {
-                            switch(signs.pop()) {
-                                case "-":
-                                    numbers.push(numbers.pop().times(-1));
-                                    break;
-                                case "–":
-                                    numbers.push(numbers.pop().times(-1));
-                                    break;
-                            }
-                        }
-                        hasPoint = false;
-                        hasExp = false;
-                        prevState = 'Number';
+                else if(isVariable(characters[i])) {
+                    if(prevState == 'Number') {
+                        errorOutput('Invalid Expression');
+                        if(event.preventDefault) event.preventDefault();
+                        return true;
                     }
-                    //Number
-                    else if (isNumber(characters[i])) {
-                        if(prevState == 'Number') {
-                            errorOutput('Invalid Expression');
-                            if(event.preventDefault) event.preventDefault();
-                            return true;
+                    var savedNum = loadNum(characters[i]);
+                    numbers.push(formatNumber(savedNum));
+                    if(signs.getCount()!=0) {
+                        switch(signs.pop()) {
+                            case "-":
+                                numbers.push(numbers.pop().times(-1));
+                                break;
+                            case "–":
+                                numbers.push(numbers.pop().times(-1));
+                                break;
                         }
-                        if(prevState == 'Exponential') {
-                            i++;
-                            var expword = '';
-                            while(i < characters.length && !isOperator(characters[i]) && characters[i] != '=') {
-                                if(!isNumber(characters[i]) && characters[i] != ' ') {
-                                    if(characters[i] == '-') {
-                                        if(prevState != 'Operator') {
-                                            prevState = 'Operator'
-                                            expword += characters[i];
-                                            continue;
+                    }
+                    hasPoint = false;
+                    hasExp = false;
+                    prevState = 'Number';
+                }
+                else if(isLetter(characters[i])) {
+                    if(prevState == 'Letter') {
+                        errorOutput('Invalid Expression');
+                        if(event.preventDefault) event.preventDefault();
+                        return true;
+                    }
+                    var cmdword = '';
+                    while (!hasError() && i < characters.length && isLetter(characters[i])) {
+                        cmdword += characters[i];
+                        i++;
+                    }
+                    //i--;
+                    var lineword = '';
+                    switch(cmdword.toUpperCase()) {
+                        //CONDITIONAL
+                        case "IF":
+                            break;
+                        case "THEN":
+                            break;
+                        case "ELSE":
+                            break;
+                        case "AND":
+                            break;
+                        case "OR":
+                            break;
+                        //ROOT
+                        case "ROOT":
+                            if((characters[i] == '(')) {
+                                prevCommand = 'ROOT';
+                                while(characters[i] != ')' && i < characters.length) {
+                                    parseExpression();
+                                    i++;
+                                }
+                            }
+                            break;
+                        //FORMAT
+                        case "FORMAT":
+                            isFormat = true;
+                            break;
+                        //DEFAULT - INVALID
+                        default:
+                            if(cmdword.substring(0,6).toUpperCase() == "FORMAT") {
+                                isFormat = true;
+                            }
+                            else {
+                                errorOutput('Invalid Expression');
+                                if(event.preventDefault) event.preventDefault();
+                                return true;
+                                break;
+                            }
+                        if (isFormat) {
+                            while(i < characters.length) {
+                                currFormat += characters[i];
+                                i++;
+                            }
+                            cmdword = cmdword.toUpperCase();
+                            currFormat = currFormat.toUpperCase();
+                            switch(cmdword.substring(6)){
+                                case 'STANDARD':
+                                    currFormat = 'STANDARD';
+                                    break;
+                                case 'FIXED':
+                                    currFormat = 'FIXED';
+                                    break;
+                                case 'SCIENTIFIC':
+                                    currFormat = 'SCIENTIFIC';
+                                    break;
+                                case 'REAL':
+                                    currFormat = 'REAL';
+                                    break;
+                                default:
+                                    if ((cmdword.substring(0,6)) == 'FIXED') {
+                                        var numword = '';
+                                        var j = 7;
+                                        while(j < cmdword.length && isDigit(cmdword.charAt(j))) {
+                                            numword += cmdword.charAt(j);
+                                            j++;
+                                        }
+                                        if(j == cmdword.length) {
+                                            precision = parseInt(numword);
                                         }
                                         else {
                                             errorOutput('Invalid Expression');
@@ -131,121 +203,22 @@ function captureInput(e) {
                                             return true;
                                         }
                                     }
-                                    errorOutput('Invalid Expression');
-                                    if(event.preventDefault) event.preventDefault();
-                                    return true;
-                                }
-                                expword += characters[i];
-                                i++;
-                            }
-                            if (!isNumber(parseFloat(expword))){
-                                errorOutput('Invalid Expression');
-                                if(event.preventDefault) event.preventDefault();
-                                return true;
-                            }
-                            i--;
-                        }
-                        var numword = '';
-                        while (!hasError() && i < characters.length && isNumber(characters[i]) || (hasExp && (characters[i] == '-' || characters[i] == '–'))) {
-                            numword += characters[i];
-                            if(hasExp && isDigit(parseInt(characters[i]))) {
-                                hasExp = false;
-                            }
-                            i++;
-                        }
-                        i--;
-                        if(isNaN(numword)) {
-                            errorOutput('Invalid Expression');
-                            if(event.preventDefault) event.preventDefault();
-                            return true;
-                        }
-                        /**if(numword.length > input_limit) {
-                            errorOutput('Overflow');
-                            if(event.preventDefault) event.preventDefault();
-                            return true;
-                        }**/
-                        var input_limit = 8;
-                        if(hasPoint)
-                            if(numword.charAt(0) == '0' && numword.charAt(1) == '.')
-                                input_limit++;
-                            input_limit++;
-
-                        if(hasExp) input_limit += 4;
-                        /**if(numword.length > input_limit) {
-                            errorOutput('Overflow');
-                            if(event.preventDefault) event.preventDefault();
-                            return true;
-                        }**/
-                        var nn = new Big(numword);
-                        if(nn.c.length > 8) {
-                            nn.c.length = 8;
-                            ns = new Big(nn.toString());
-                            if(ns.eq(nn)) {
-                                numbers.push(nn.toExponential(8));
-                            }
-                            else numbers.push(nn);
-                        }
-                        else {
-                            numbers.push(nn);
-                        }
-                        if(signs.getCount()!=0) {
-                            switch(signs.pop()) {
-                                case "-":
-                                    numbers.push(numbers.pop().times(-1));
-                                    break;
-                                case "–":
-                                    numbers.push(numbers.pop().times(-1));
+                                    else {
+                                        currFormat = 'STANDARD';
+                                        precision = 8;
+                                        errorOutput('Invalid Expression');
+                                        if(event.preventDefault) event.preventDefault();
+                                        return true;
+                                    }
                                     break;
                             }
+                            break;
                         }
-                        hasPoint = false;
-                        hasExp = false;
-                        prevState = 'Number';
                     }
-                    //Parenthesis
-                    else if (characters[i] == '(') {
-                        operators.push(characters[i]);
-                    }
-                    else if (characters[i] == ')') {
-                        while (!hasError() && operators.peek() != '(') {
-                            if(!(pushNumber(applyOperation(operators.pop(), numbers.pop(), numbers.pop())))) {
-                                if(event.preventDefault) event.preventDefault();
-                                return true;
-                            }
-                        }
-                        operators.pop();
-                    }
-                    //Sign
-                    else if((characters[i] == "+" || characters[i] == "-")&&(i==0 || isOperator(characters[i-1]))) {
-                        if(signs.getCount() > 0) {
-                            errorOutput('Invalid Expression');
-                            if(event.preventDefault) event.preventDefault();
-                            return true;
-                        }
-                        if(signs.peek() == '+') {
-                            errorOutput('Invalid Expression');
-                            if(event.preventDefault) event.preventDefault();
-                            return true;
-                        }
-                        signs.push(characters[i]);
-                        prevState = 'Sign';
-                    }
-                    //Operations
-                    else if (isOperator(characters[i])) {
-                        while (!hasError() && operators.peek() != null && higherOrder(characters[i], operators.peek())) {
-                             if(!(pushNumber(applyOperation(operators.pop(), numbers.pop(), numbers.pop())))) {
-                                 if(event.preventDefault) event.preventDefault();
-                                 return true;
-                             }
-                        }
-                        operators.push(characters[i]);
-                        prevState = 'Operator';
-                    }
-                    else {
-                        errorOutput('Invalid Expression');
-                        if(event.preventDefault) event.preventDefault();
-                        return true;
-                    }
+                    prevState = 'Letter';
+                }
+                else {
+                    parseExpression();
                 }
             }
             if (!hasError()) {
@@ -310,7 +283,18 @@ function commonOutput() {
 }
 function validOutput() {
     result = numbers.pop()
-
+    switch(currFormat) {
+        case 'STANDARD':
+            break;
+        case 'FIXED':
+            break;
+        case 'SCIENTIFIC':
+            break;
+        case 'REAL':
+            break;
+        default:
+            break;
+    }
     switch(saveOperation) {
         case 'A':
             document.getElementById('varA').value = result.toString();
@@ -334,8 +318,9 @@ function validOutput() {
     document.getElementById("operations").innerHTML = txt;
     document.getElementById('message').innerHTML = " ";
     document.getElementById('decimal').value = result;
-    document.getElementById('hex').value = convertDecimal(parseInt(result), 16);
-    document.getElementById('binary').value = convertDecimal(parseInt(result), 2);
+    //Disabled until fixed
+    //document.getElementById('hex').value = convertDecimal(parseInt(result), 16);
+    //document.getElementById('binary').value = convertDecimal(parseInt(result), 2);
 
     commonOutput();
 }
@@ -347,7 +332,6 @@ function isExponential(num) {
 function isValid() {
     var isValid = false;
     var re = /[0-9A-Ca-ceE+-/*^()= ]/g;
-    //var re = /([ ]*[-+]?[0-9]{1,12})([ ]*[+-/*][ ]*[+-]?[0-9]{1,12})*([ ]*[=]{1}[ ]*)/g; //
     isValid = re.test(command);
     if(isValid)
         return true;
@@ -386,6 +370,7 @@ function applyOperation(operator, b, a) {
     var tempOp = new Big(0);
     switch (operator)
     {
+
         case '+':
             tempOp = a.plus(b);
             tempOp = formatNumber(tempOp);
@@ -418,6 +403,10 @@ function applyOperation(operator, b, a) {
                 return tempOp;
             }
             break;
+        case ',':
+            if(prevCommand == '') {
+                errorOutput('Invalid Expression')
+            }
         case '^':
             tempOp = new Big(Math.pow(parseFloat(a),parseFloat(b)));
             tempOp = formatNumber(tempOp);
@@ -488,7 +477,7 @@ function reverseString(s) {
     return s.split("").reverse().join("");
 }
 function isOperator(chara) {
-    if(chara == '+' || chara == '-' || chara == '–' || chara == '*' || chara == '/' || chara == '^')
+    if(chara == '+' || chara == '-' || chara == '–' || chara == '*' || chara == '/' || chara == '^' || chara == ',')
         return true;
     return false;
 }
@@ -523,6 +512,18 @@ function isNumber(num) {
     }
     return false;
 }
+function isLetter(chara) {
+    if (chara >= 'A' && chara <= 'Z')
+        return true;
+    if(chara == 'a' && chara <= 'z')
+        return true;
+    return false;
+}
+function isParenthesis(chara) {
+    if (chara == '(' || chara == ')' )
+        return true;
+    return false;
+}
 function formatNumber(num) {
     var x;
     if(num.c.length > 8) {
@@ -544,6 +545,162 @@ function formatNumber(num) {
         return x;
     }
     return num;
+}
+function parseExpression() {
+    if(!hasError()){
+        //Variable
+        if(isVariable(characters[i])) {
+            if(prevState == 'Number') {
+                errorOutput('Invalid Expression');
+                if(event.preventDefault) event.preventDefault();
+                return true;
+            }
+            var savedNum = loadNum(characters[i]);
+            numbers.push(formatNumber(savedNum));
+            if(signs.getCount()!=0) {
+                switch(signs.pop()) {
+                    case "-":
+                        numbers.push(numbers.pop().times(-1));
+                        break;
+                    case "–":
+                        numbers.push(numbers.pop().times(-1));
+                        break;
+                }
+            }
+            hasPoint = false;
+            hasExp = false;
+            prevState = 'Number';
+        }
+        //Number
+        else if (isNumber(characters[i])) {
+            if(prevState == 'Number') {
+                errorOutput('Invalid Expression');
+                if(event.preventDefault) event.preventDefault();
+                return true;
+            }
+            if(prevState == 'Exponential') {
+                i++;
+                var expword = '';
+                while(i < characters.length && !isOperator(characters[i]) && characters[i] != '=') {
+                    if(!isNumber(characters[i]) && characters[i] != ' ') {
+                        if(characters[i] == '-') {
+                            if(prevState != 'Operator') {
+                                prevState = 'Operator'
+                                expword += characters[i];
+                                continue;
+                            }
+                            else {
+                                errorOutput('Invalid Expression');
+                                if(event.preventDefault) event.preventDefault();
+                                return true;
+                            }
+                        }
+                        errorOutput('Invalid Expression');
+                        if(event.preventDefault) event.preventDefault();
+                        return true;
+                    }
+                    expword += characters[i];
+                    i++;
+                }
+                if (!isNumber(parseFloat(expword))){
+                    errorOutput('Invalid Expression');
+                    if(event.preventDefault) event.preventDefault();
+                    return true;
+                }
+                i--;
+            }
+            var numword = '';
+            while (!hasError() && i < characters.length && isNumber(characters[i]) || (hasExp && (characters[i] == '-' || characters[i] == '–'))) {
+                numword += characters[i];
+                if(hasExp && isDigit(parseInt(characters[i]))) {
+                    hasExp = false;
+                }
+                i++;
+            }
+            i--;
+            if(isNaN(numword)) {
+                errorOutput('Invalid Expression');
+                if(event.preventDefault) event.preventDefault();
+                return true;
+            }
+            var input_limit = 8;
+            if(hasPoint)
+                if(numword.charAt(0) == '0' && numword.charAt(1) == '.')
+                    input_limit++;
+            input_limit++;
+
+            if(hasExp) input_limit += 4;
+            var nn = new Big(numword);
+            if(nn.c.length > 8) {
+                nn.c.length = 8;
+                ns = new Big(nn.toString());
+                if(ns.eq(nn)) {
+                    numbers.push(nn.toExponential(8));
+                }
+                else numbers.push(nn);
+            }
+            else {
+                numbers.push(nn);
+            }
+            if(signs.getCount()!=0) {
+                switch(signs.pop()) {
+                    case "-":
+                        numbers.push(numbers.pop().times(-1));
+                        break;
+                    case "–":
+                        numbers.push(numbers.pop().times(-1));
+                        break;
+                }
+            }
+            hasPoint = false;
+            hasExp = false;
+            prevState = 'Number';
+        }
+        //Parenthesis
+        else if (characters[i] == '(') {
+            operators.push(characters[i]);
+        }
+        else if (characters[i] == ')') {
+            while (!hasError() && operators.peek() != '(') {
+                if(!(pushNumber(applyOperation(operators.pop(), numbers.pop(), numbers.pop())))) {
+                    if(event.preventDefault) event.preventDefault();
+                    return true;
+                }
+            }
+            operators.pop();
+        }
+        //Sign
+        else if((characters[i] == "+" || characters[i] == "-")&&(i==0 || isOperator(characters[i-1]))) {
+            if(signs.getCount() > 0) {
+                errorOutput('Invalid Expression');
+                if(event.preventDefault) event.preventDefault();
+                return true;
+            }
+            if(signs.peek() == '+') {
+                errorOutput('Invalid Expression');
+                if(event.preventDefault) event.preventDefault();
+                return true;
+            }
+            signs.push(characters[i]);
+            prevState = 'Sign';
+        }
+        //Operations
+        else if (isOperator(characters[i])) {
+            while (!hasError() && operators.peek() != null && higherOrder(characters[i], operators.peek())) {
+                if(!(pushNumber(applyOperation(operators.pop(), numbers.pop(), numbers.pop())))) {
+                    if(event.preventDefault) event.preventDefault();
+                    return true;
+                }
+            }
+            operators.push(characters[i]);
+            prevState = 'Operator';
+        }
+        else {
+            errorOutput('Invalid Expression');
+            if(event.preventDefault) event.preventDefault();
+            return true;
+        }
+    }
 }
 function higherOrder(op1, op2) {
     var rank = [-1, -1];
